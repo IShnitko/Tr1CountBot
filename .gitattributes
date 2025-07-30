@@ -1,0 +1,2 @@
+git init/mvnw text eol=lf
+*.cmd text eol=crlf
