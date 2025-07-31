@@ -20,6 +20,6 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "";
+        return "TriCount";
     }
 }
