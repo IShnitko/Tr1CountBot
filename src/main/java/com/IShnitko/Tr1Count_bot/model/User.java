@@ -29,7 +29,7 @@ public class User {
             fetch = FetchType.LAZY)
     private List<Expense> personalExpenses;
 
-    @OneToMany(mappedBy = "users",
+    @OneToMany(mappedBy = "user",
             cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
             fetch = FetchType.LAZY)
     private List<ExpenseShare> expenseShares;

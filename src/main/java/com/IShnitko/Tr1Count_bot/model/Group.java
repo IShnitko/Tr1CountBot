@@ -24,12 +24,12 @@ public class Group {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "groups",
+    @OneToMany(mappedBy = "group",
             cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
             fetch = FetchType.LAZY)
     private List<GroupMembership> members;
 
-    @OneToMany(mappedBy = "groups",
+    @OneToMany(mappedBy = "group",
             cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
             fetch = FetchType.LAZY)
     private List<Expense> groupExpenses;

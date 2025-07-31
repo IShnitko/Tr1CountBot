@@ -1,11 +1,20 @@
--- Удаляем схему если существует (с каскадом для удаления всех объектов)
-DROP SCHEMA IF EXISTS tricount_schema CASCADE;
+CREATE SCHEMA IF NOT EXISTS tricount_schema;
+SET search_path TO tricount_schema;
 
--- Создаем новую схему
-CREATE SCHEMA tricount_schema;
-SET
-search_path TO tricount_schema;
+-- Создаем функции для предоставления прав
+CREATE OR REPLACE FUNCTION grant_privileges_to_user()
+RETURNS void AS $$
+DECLARE
+db_user TEXT := 'tricount_admin';  -- Фиксированное имя пользователя
+BEGIN
+EXECUTE format('GRANT ALL PRIVILEGES ON SCHEMA tricount_schema TO %I', db_user);
+EXECUTE format('GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA tricount_schema TO %I', db_user);
+EXECUTE format('GRANT USAGE ON ALL SEQUENCES IN SCHEMA tricount_schema TO %I', db_user);
+END;
+$$ LANGUAGE plpgsql;
 
+-- Вызываем функцию
+SELECT grant_privileges_to_user();
 -- Таблица пользователей
 CREATE TABLE users
 (
@@ -42,7 +51,7 @@ CREATE TABLE expenses
     paid_by_user_id BIGINT         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     title           VARCHAR(200)   NOT NULL,
     amount          NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
-    bought_at       TIMESTAMP,
+    date            TIMESTAMP,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

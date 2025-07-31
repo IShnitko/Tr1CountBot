@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 .env
+docker-compose.override.yml
 
 ### NetBeans ###
 /nbproject/private/
