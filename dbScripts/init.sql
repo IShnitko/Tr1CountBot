@@ -1,8 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS tricount_schema;
-SET search_path TO tricount_schema;
+SET
+search_path TO tricount_schema;
 
 -- Создаем функции для предоставления прав
-CREATE OR REPLACE FUNCTION grant_privileges_to_user()
+CREATE
+OR REPLACE FUNCTION grant_privileges_to_user()
 RETURNS void AS $$
 DECLARE
 db_user TEXT := 'tricount_admin';  -- Фиксированное имя пользователя
@@ -11,25 +13,23 @@ EXECUTE format('GRANT ALL PRIVILEGES ON SCHEMA tricount_schema TO %I', db_user);
 EXECUTE format('GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA tricount_schema TO %I', db_user);
 EXECUTE format('GRANT USAGE ON ALL SEQUENCES IN SCHEMA tricount_schema TO %I', db_user);
 END;
-$$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 
 -- Вызываем функцию
 SELECT grant_privileges_to_user();
 -- Таблица пользователей
 CREATE TABLE users
 (
-    id         BIGSERIAL PRIMARY KEY,
-    name       VARCHAR(100) NOT NULL,
-    email      VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    telegram_id BIGINT PRIMARY KEY, -- Используем Telegram ID как PK
+    name        VARCHAR(100) NOT NULL
 );
-
 -- Таблица групп
 CREATE TABLE groups
 (
     id                 BIGSERIAL PRIMARY KEY,
     name               VARCHAR(200) NOT NULL,
-    created_by_user_id BIGINT       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    created_by_user_id BIGINT       NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE group_memberships
 (
     id        BIGSERIAL PRIMARY KEY,
     group_id  BIGINT NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    user_id   BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id   BIGINT NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (group_id, user_id) -- Один пользователь - одна запись в группе
 );
@@ -48,7 +48,7 @@ CREATE TABLE expenses
 (
     id              BIGSERIAL PRIMARY KEY,
     group_id        BIGINT         NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    paid_by_user_id BIGINT         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    paid_by_user_id BIGINT         NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     title           VARCHAR(200)   NOT NULL,
     amount          NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
     date            TIMESTAMP,
@@ -60,7 +60,7 @@ CREATE TABLE expense_shares
 (
     id         BIGSERIAL PRIMARY KEY,
     expense_id BIGINT         NOT NULL REFERENCES expenses (id) ON DELETE CASCADE,
-    user_id    BIGINT         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id    BIGINT         NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     amount     NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
     UNIQUE (expense_id, user_id) -- Одна доля на пользователя в расходе
 );
