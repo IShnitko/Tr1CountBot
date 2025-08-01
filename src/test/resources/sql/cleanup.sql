@@ -10,5 +10,4 @@ TRUNCATE TABLE tricount_schema.groups RESTART IDENTITY;
 
 TRUNCATE TABLE tricount_schema.users RESTART IDENTITY;
 
--- Включаем проверку внешних ключей обратно
 SET REFERENTIAL_INTEGRITY TRUE;
