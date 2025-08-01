@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "groups")
+@Table(name = "groups", schema = "tricount_schema")
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

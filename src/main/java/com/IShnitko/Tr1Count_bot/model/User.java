@@ -7,12 +7,14 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "users")
+@Table(name = "users", schema = "tricount_schema")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "telegram_id")
+    private Long telegramId;
+
+    @Column(name = "name")
+    private String name;
 
     @OneToMany(mappedBy = "createdBy",
             cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
