@@ -1,6 +1,5 @@
 CREATE SCHEMA IF NOT EXISTS tricount_schema;
 
--- Таблица пользователей
 CREATE TABLE tricount_schema.users
 (
     telegram_id BIGINT PRIMARY KEY,
