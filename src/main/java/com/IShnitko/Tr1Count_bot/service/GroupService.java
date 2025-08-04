@@ -11,4 +11,8 @@ public interface GroupService {
     Group createGroup(String name, User creator);
     GroupMembership addUserToGroup(Long groupId, Long userId);
     List<Group> getGroupsForUser(Long userId);
+    void deleteUserFromGroup(Long groupId, Long userId);
+    List<User> getUsersForGroup(Long groupId);
+    Group updateGroupName(Long groupId, String newName);
+    void deleteGroup(Long groupId);
 }

@@ -38,10 +38,17 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public GroupMembership addUserToGroup(Long groupId, Long userId) {
+        Group group = groupRepository.findGroupById(groupId);
+        User user = userRepository.findUserByTelegramId(userId);
+
         GroupMembership gm = new GroupMembership();
-        gm.setGroup(groupRepository.findGroupById(groupId));
-        gm.setUser(userRepository.findUserByTelegramId(userId));
+        gm.setGroup(group);
+        gm.setUser(user);
         gm.setJoinedAt(LocalDateTime.now());
+
+        var potentialGMByGroup = groupMembershipRepository.findGroupMembershipsByGroup(group);
+        if (potentialGMByGroup.contains(user)) return null;
+
         return groupMembershipRepository.save(gm);
     }
 
@@ -49,5 +56,31 @@ public class GroupServiceImpl implements GroupService {
     public List<Group> getGroupsForUser(Long userId) {
         return  groupMembershipRepository.findGroupMembershipsByUser(
                 userRepository.findUserByTelegramId(userId));
+    }
+
+    @Override
+    public void deleteUserFromGroup(Long groupId, Long userId) {
+        User user = userRepository.findCreatorOfGroup(groupId);
+        if (!user.getTelegramId().equals(userId)) throw new RuntimeException("Can't delete creator of the group");
+        user = userRepository.findUserByTelegramId(userId);
+        if (user == null) throw new RuntimeException("User doesn't exist in this group");
+        groupMembershipRepository.deleteGroupMembershipByUser(user);
+    }
+
+    @Override
+    public List<User> getUsersForGroup(Long groupId) {
+        return groupMembershipRepository.findGroupMembershipsByGroup(groupRepository.findGroupById(groupId));
+    }
+
+    @Override
+    public Group updateGroupName(Long groupId, String newName) {
+        Group group = groupRepository.findGroupById(groupId);
+        group.setName(newName);
+        return groupRepository.save(group);
+    }
+
+    @Override
+    public void deleteGroup(Long groupId) {
+        groupRepository.deleteGroupById(groupId);
     }
 }

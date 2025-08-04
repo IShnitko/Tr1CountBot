@@ -10,4 +10,8 @@ import java.util.List;
 public interface GroupMembershipRepository extends JpaRepository<GroupMembership, Long> {
 
     List<Group> findGroupMembershipsByUser(User user);
+
+    void deleteGroupMembershipByUser(User user);
+
+    List<User> findGroupMembershipsByGroup(Group group);
 }

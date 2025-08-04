@@ -14,8 +14,8 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     Optional<Group> findGroupByName(String name);
 
-    List<Group> findGroupByCreatedBy(User createdBy);
-
     @Query("SELECT g FROM Group g WHERE g.createdBy.telegramId = :userId")
     List<Group> findGroupsByCreatedByUserId(@Param("userId") Long userId);
+
+    void deleteGroupById(long id);
 }

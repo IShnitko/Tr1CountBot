@@ -18,7 +18,7 @@ public class GroupMembership {
     private Group group;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id") // maybe in some future add so that it is possible to create custom names of users for each group
     private User user;
 
     @Column(name = "joined_at")
