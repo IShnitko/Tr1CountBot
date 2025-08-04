@@ -15,7 +15,6 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-
     }
 
     @Override
