@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +19,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "JOIN Group g on g.createdBy = u " +
             "WHERE g.id = :groupId")
     User findCreatorOfGroup(Long groupId);
+
+    @Query("SELECT u " +
+            "from User u " +
+            "join GroupMembership gm on gm.user = u " +
+            "where gm.group.id = :groupId")
+    List<User> findUsersByGroup(Long groupId);
+
+    User findUsersByTelegramId(Long telegramId);
 }
