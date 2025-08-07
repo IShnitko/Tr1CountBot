@@ -31,8 +31,13 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Group createGroup(String name, User creator) {
         Group group = new Group();
-        String code = GroupCodeGenerator.generateCode(5);
-        group.setId(code);
+        while (true) {
+            String code = GroupCodeGenerator.generateCode(5);
+            if (groupRepository.findGroupById(code) == null) {
+                group.setId(code);
+                break;
+            }
+        }
         group.setName(name);
         group.setCreatedAt(LocalDateTime.now());
         group.setCreatedBy(creator);
