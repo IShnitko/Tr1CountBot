@@ -11,5 +11,4 @@ import java.util.Map;
 public interface BalanceService {
     Expense addExpenseToGroup(Long groupId, List<User> sharedUsers, Long paidByUserId, String title, BigDecimal amount, LocalDateTime date);
     Map<User, BigDecimal> calculateBalance(Long groupId);
-    Map<User, BigDecimal> calculateUserBalance(Long userId, Long groupId);
 }
