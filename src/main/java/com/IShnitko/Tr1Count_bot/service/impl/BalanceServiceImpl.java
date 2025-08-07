@@ -72,10 +72,6 @@ public class BalanceServiceImpl implements BalanceService {
             for (Expense e : eList) {
                 // here we take every expense of curr user, add full value of that expense to paidBy user
                 // then we take every expenseshare entity of that expense and subtract amount from each user associated with this expense
-                // example:
-                // paidby user1 90 pln
-                // expenseshare user2 30 pln user1 30 pln user3 30 pln
-                // balance: user1: +60, user2: -30, user3: -30
                 balance.put(user, balance.getOrDefault(user, BigDecimal.valueOf(0)).add(e.getAmount()));
                 List<ExpenseShare> esList = expenseShareRepository.findExpenseSharesByExpense(e); // get every es entity associated with this expense
                 for (ExpenseShare es : esList) {
