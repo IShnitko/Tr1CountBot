@@ -18,13 +18,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "FROM User u " +
             "JOIN Group g on g.createdBy = u " +
             "WHERE g.id = :groupId")
-    User findCreatorOfGroup(Long groupId);
+    User findCreatorOfGroup(String groupId);
 
     @Query("SELECT u " +
             "from User u " +
             "join GroupMembership gm on gm.user = u " +
             "where gm.group.id = :groupId")
-    List<User> findUsersByGroup(Long groupId);
+    List<User> findUsersByGroup(String groupId);
 
     User findUsersByTelegramId(Long telegramId);
 }

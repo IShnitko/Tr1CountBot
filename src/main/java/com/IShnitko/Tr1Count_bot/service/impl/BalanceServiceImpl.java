@@ -36,7 +36,7 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public Expense addExpenseToGroup(Long groupId, List<User> sharedUsers, Long paidByUserId,
+    public Expense addExpenseToGroup(String groupId, List<User> sharedUsers, Long paidByUserId,
                                      String title, BigDecimal amount, LocalDateTime date) {
         Expense expense = saveExpense(groupId, paidByUserId, title, amount, date); // just saved expense
         int numberOfSharedUsers = sharedUsers.size();
@@ -50,7 +50,7 @@ public class BalanceServiceImpl implements BalanceService {
         return expense;
     }
 
-    private Expense saveExpense(Long groupId, Long paidByUserId,
+    private Expense saveExpense(String groupId, Long paidByUserId,
                                 String title, BigDecimal amount, LocalDateTime date) {
         Expense expense = new Expense();
         expense.setGroup(groupRepository.findGroupById(groupId));
@@ -64,7 +64,7 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public Map<User, BigDecimal> calculateBalance(Long groupId) {
+    public Map<User, BigDecimal> calculateBalance(String groupId) {
         Map<User, BigDecimal> balance = new HashMap<>();
         List<User> members = userRepository.findUsersByGroup(groupId);
         for (User user : members) { // finding every user in the group

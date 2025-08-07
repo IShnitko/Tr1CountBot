@@ -11,8 +11,8 @@ import java.util.List;
 @Table(name = "groups", schema = "tricount_schema")
 public class Group {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @Column(name = "id")
+    private String id;
 
     @Column(name = "name")
     private String name;

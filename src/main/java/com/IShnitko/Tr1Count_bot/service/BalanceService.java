@@ -9,6 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface BalanceService {
-    Expense addExpenseToGroup(Long groupId, List<User> sharedUsers, Long paidByUserId, String title, BigDecimal amount, LocalDateTime date);
-    Map<User, BigDecimal> calculateBalance(Long groupId);
+    Expense addExpenseToGroup(String groupId, List<User> sharedUsers, Long paidByUserId, String title, BigDecimal amount, LocalDateTime date);
+    Map<User, BigDecimal> calculateBalance(String groupId);
 }

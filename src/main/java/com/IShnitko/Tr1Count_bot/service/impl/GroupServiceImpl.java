@@ -7,6 +7,7 @@ import com.IShnitko.Tr1Count_bot.repository.GroupMembershipRepository;
 import com.IShnitko.Tr1Count_bot.repository.GroupRepository;
 import com.IShnitko.Tr1Count_bot.repository.UserRepository;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
+import com.IShnitko.Tr1Count_bot.util.GroupCodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,8 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Group createGroup(String name, User creator) {
         Group group = new Group();
+        String code = GroupCodeGenerator.generateCode(5);
+        group.setId(code);
         group.setName(name);
         group.setCreatedAt(LocalDateTime.now());
         group.setCreatedBy(creator);
@@ -37,7 +40,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public GroupMembership addUserToGroup(Long groupId, Long userId) {
+    public GroupMembership addUserToGroup(String groupId, Long userId) {
         Group group = groupRepository.findGroupById(groupId);
         User user = userRepository.findUserByTelegramId(userId);
 
@@ -46,7 +49,7 @@ public class GroupServiceImpl implements GroupService {
         gm.setUser(user);
         gm.setJoinedAt(LocalDateTime.now());
 
-        var potentialGMByGroup = groupMembershipRepository.findGroupMembershipsByGroup(group);
+        var potentialGMByGroup = groupMembershipRepository.findUsersByGroup(group);
         if (potentialGMByGroup.contains(user)) return null;
 
         return groupMembershipRepository.save(gm);
@@ -54,12 +57,12 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<Group> getGroupsForUser(Long userId) {
-        return  groupMembershipRepository.findGroupMembershipsByUser(
+        return  groupMembershipRepository.findGroupsByUser(
                 userRepository.findUserByTelegramId(userId));
     }
 
     @Override
-    public void deleteUserFromGroup(Long groupId, Long userId) {
+    public void deleteUserFromGroup(String groupId, Long userId) {
         User user = userRepository.findCreatorOfGroup(groupId);
         if (!user.getTelegramId().equals(userId)) throw new RuntimeException("Can't delete creator of the group");
         user = userRepository.findUserByTelegramId(userId);
@@ -68,19 +71,19 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public List<User> getUsersForGroup(Long groupId) {
-        return groupMembershipRepository.findGroupMembershipsByGroup(groupRepository.findGroupById(groupId));
+    public List<User> getUsersForGroup(String groupId) {
+        return groupMembershipRepository.findUsersByGroup(groupRepository.findGroupById(groupId));
     }
 
     @Override
-    public Group updateGroupName(Long groupId, String newName) {
+    public Group updateGroupName(String groupId, String newName) {
         Group group = groupRepository.findGroupById(groupId);
         group.setName(newName);
         return groupRepository.save(group);
     }
 
     @Override
-    public void deleteGroup(Long groupId) {
+    public void deleteGroup(String groupId) {
         groupRepository.deleteGroupById(groupId);
     }
 }

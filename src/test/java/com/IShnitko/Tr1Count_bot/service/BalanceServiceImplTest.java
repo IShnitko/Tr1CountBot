@@ -74,7 +74,7 @@ class BalanceServiceImplTest {
 
         // Инициализация группы
         group = new Group();
-        group.setId(1L);
+        group.setId(String.valueOf(1L));
 
         // Инициализация расхода
         expense = new Expense();
@@ -89,7 +89,7 @@ class BalanceServiceImplTest {
     @DisplayName("addExpenseToGroup: Добавление расхода с несколькими участниками")
     void addExpenseToGroup_MultipleUsers_SavesCorrectly() {
         // Установка ожидаемого поведения репозиториев
-        when(groupRepository.findGroupById(1L)).thenReturn(group);
+        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(group);
         when(userRepository.findUserByTelegramId(1L)).thenReturn(user1);
         when(expenseRepository.save(any(Expense.class))).thenReturn(expense);
         when(expenseShareRepository.save(any(ExpenseShare.class))).thenReturn(new ExpenseShare());
@@ -113,7 +113,7 @@ class BalanceServiceImplTest {
     @DisplayName("addExpenseToGroup: Проверка округления доли при неравном делении")
     void addExpenseToGroup_UnevenDivision_RoundsDownCorrectly() {
         // Установка ожидаемого поведения репозиториев
-        when(groupRepository.findGroupById(1L)).thenReturn(group);
+        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(group);
         when(userRepository.findUserByTelegramId(1L)).thenReturn(user1);
         when(expenseRepository.save(any(Expense.class))).thenReturn(expense);
 

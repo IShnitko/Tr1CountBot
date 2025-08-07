@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    Group findGroupById(long id);
+    Group findGroupById(String id);
 
     Optional<Group> findGroupByName(String name);
 
     @Query("SELECT g FROM Group g WHERE g.createdBy.telegramId = :userId")
     List<Group> findGroupsByCreatedByUserId(@Param("userId") Long userId);
 
-    void deleteGroupById(long id);
+    void deleteGroupById(String id);
 }
