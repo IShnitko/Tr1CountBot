@@ -91,4 +91,9 @@ public class GroupServiceImpl implements GroupService {
     public void deleteGroup(String groupId) {
         groupRepository.deleteGroupById(groupId);
     }
+
+    @Override
+    public String getGroupName(String groupId) {
+        return groupRepository.findGroupById(groupId).getName();
+    }
 }

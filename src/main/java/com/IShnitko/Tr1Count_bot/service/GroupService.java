@@ -15,4 +15,5 @@ public interface GroupService {
     List<User> getUsersForGroup(String groupId);
     Group updateGroupName(String groupId, String newName);
     void deleteGroup(String groupId);
+    String getGroupName(String groupId); // TODO: Maybe change to return group info or just group object
 }
