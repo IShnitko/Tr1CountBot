@@ -1,5 +1,6 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
+import com.IShnitko.Tr1Count_bot.dto.UpdateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.ExpenseShare;
 import com.IShnitko.Tr1Count_bot.model.Group;
@@ -81,5 +82,50 @@ public class BalanceServiceImpl implements BalanceService {
             }
         }
         return balance;
+    }
+
+    @Override
+    public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
+        Expense expenseToUpdate = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new IllegalArgumentException("Expense wasn't found"));
+
+        // update filed that are only in dto
+        updateDto.paidByUserId().ifPresent(newPaidByUserId -> {
+            User newPayer = userRepository.findUserByTelegramId(newPaidByUserId);
+            expenseToUpdate.setPaidBy(newPayer);
+        });
+
+        updateDto.title().ifPresent(expenseToUpdate::setTitle);
+
+        updateDto.amount().ifPresent(expenseToUpdate::setAmount);
+
+        updateDto.date().ifPresent(expenseToUpdate::setDate);
+
+        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
+            List<ExpenseShare> oldShares = expenseShareRepository.findExpenseSharesByExpense(expenseToUpdate);
+            expenseShareRepository.deleteAll(oldShares);
+
+            BigDecimal totalAmount = expenseToUpdate.getAmount();
+            int numberOfSharedUsers = newSharedUsers.size();
+
+            if (numberOfSharedUsers > 0) {
+                BigDecimal shareAmount = totalAmount.divide(BigDecimal.valueOf(numberOfSharedUsers), 2, RoundingMode.DOWN);
+
+                for (User user : newSharedUsers) {
+                    ExpenseShare es = new ExpenseShare();
+                    es.setExpense(expenseToUpdate);
+                    es.setUser(user);
+                    es.setAmount(shareAmount);
+                    expenseShareRepository.save(es);
+                }
+            }
+        });
+
+        return expenseRepository.save(expenseToUpdate);
+    }
+
+    @Override
+    public List<Expense> getExpensesForGroup(String groupId) {
+        return expenseRepository.getExpensesByGroup(groupRepository.findGroupById(groupId));
     }
 }
