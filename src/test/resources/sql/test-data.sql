@@ -5,10 +5,11 @@ INSERT INTO tricount_schema.users (telegram_id, name) VALUES
                                                           (555555555, 'Sveta'),
                                                           (111111111, 'Dima');
 
-INSERT INTO tricount_schema.groups (name, created_by_user_id) VALUES
-                                                                  ('Travelling', 123456789),
-                                                                  ('Party', 987654321),
-                                                                  ('House flipping', 111111111);
+INSERT INTO tricount_schema.groups (name, invitation_code, created_by_user_id) VALUES
+                                                                                   ('Travelling', 'YFPSJ', 123456789),
+                                                                                   ('Party', 'QWERZ', 987654321),
+                                                                                   ('House flipping', 'ASDFG', 111111111);
+
 
 -- Ручное добавление создателей (так как триггеры отсутствуют)
 INSERT INTO tricount_schema.group_memberships (group_id, user_id) VALUES

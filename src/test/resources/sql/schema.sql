@@ -11,6 +11,7 @@ CREATE TABLE tricount_schema.groups
 (
     id                 BIGSERIAL PRIMARY KEY,
     name               VARCHAR(200) NOT NULL,
+    invitation_code    VARCHAR(10)  NOT NULL UNIQUE,
     created_by_user_id BIGINT       NOT NULL REFERENCES tricount_schema.users (telegram_id) ON DELETE CASCADE,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -38,9 +39,15 @@ public class GroupServiceImpl implements GroupService {
                 break;
             }
         }
+        String invitationCode;
+        do {
+            invitationCode = GroupCodeGenerator.generateCode(5);
+        } while (groupRepository.findByInvitationCode(invitationCode).isPresent());
+        group.setInvitationCode(invitationCode);
         group.setName(name);
         group.setCreatedAt(LocalDateTime.now());
         group.setCreatedBy(creator);
+        addUserToGroup(group.getId(), creator.getTelegramId());
         return groupRepository.save(group);
     }
 
@@ -58,6 +65,38 @@ public class GroupServiceImpl implements GroupService {
         if (potentialGMByGroup.contains(user)) return null;
 
         return groupMembershipRepository.save(gm);
+    }
+
+    @Override
+    public GroupMembership joinGroupByInvitation(String invitationCode, Long userId) {
+        // Находим группу по коду приглашения
+        Optional<Group> optionalGroup = groupRepository.findByInvitationCode(invitationCode);
+
+        if (optionalGroup.isEmpty()) {
+            throw new IllegalArgumentException("Группа с кодом приглашения '" + invitationCode + "' не найдена.");
+        }
+
+        Group group = optionalGroup.get();
+
+        // Находим пользователя, который хочет присоединиться
+        User user = userRepository.findUserByTelegramId(userId);
+
+        if (user == null) {
+            throw new IllegalArgumentException("Пользователь с ID '" + userId + "' не найден.");
+        }
+
+        // Проверяем, не является ли пользователь уже участником
+        if (groupMembershipRepository.findUsersByGroup(group).contains(user)) {
+            throw new IllegalArgumentException("Пользователь уже является участником этой группы.");
+        }
+
+        // Создаем и сохраняем новое членство
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(group);
+        membership.setUser(user);
+        membership.setJoinedAt(LocalDateTime.now());
+
+        return groupMembershipRepository.save(membership);
     }
 
     @Override

@@ -18,4 +18,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     List<Group> findGroupsByCreatedByUserId(@Param("userId") Long userId);
 
     void deleteGroupById(String id);
+
+    Optional<Group> findByInvitationCode(String invitationCode);
 }
