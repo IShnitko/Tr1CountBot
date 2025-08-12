@@ -8,13 +8,23 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class UserStateManager {
     private final Map<Long, UserState> userStates = new ConcurrentHashMap<>();
+    private final Map<Long, String> chosenGroups = new ConcurrentHashMap<>();
 
     public void setState(Long chatId, UserState state) {
         userStates.put(chatId, state);
     }
 
+    public void setState(Long chatId, String groupId){
+        userStates.put(chatId, UserState.IN_THE_GROUP);
+        chosenGroups.put(chatId, groupId);
+    }
+
     public UserState getState(Long chatId) {
         return userStates.getOrDefault(chatId, null);
+    }
+
+    public String getChosenGroup(Long chatId) {
+        return chosenGroups.get(chatId);
     }
 
     public void clearState(Long chatId) {
@@ -23,6 +33,7 @@ public class UserStateManager {
 
     public void clearUserData(Long chatId) {
         clearState(chatId);
+        chosenGroups.remove(chatId);
     }
 
 }
