@@ -44,7 +44,6 @@ public class GroupServiceImpl implements GroupService {
         group.setCreatedAt(LocalDateTime.now());
         group.setCreatedBy(userRepository.findUserByTelegramId(userId)
                 .orElseThrow(() -> new UserNotFoundException("Creator of the group couldn't be set")));
-        addUserToGroup(group.getId(), userId);
         return groupRepository.save(group);
     }
 
