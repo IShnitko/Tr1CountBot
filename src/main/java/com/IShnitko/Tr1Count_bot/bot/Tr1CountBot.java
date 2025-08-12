@@ -46,48 +46,182 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            Long chatId = update.getMessage().getChatId();
-            Long userId = update.getMessage().getFrom().getId();
+        if (!update.hasMessage() || !update.getMessage().hasText()) {
+            return;
+        }
 
-            UserState userState = userStateManager.getState(chatId);
+        org.telegram.telegrambots.meta.api.objects.User telegramUser = update.getMessage().getFrom();
+        Long chatId = update.getMessage().getChatId();
+        String messageText = update.getMessage().getText();
+        Long userId = telegramUser.getId();
 
-            switch (userState) {
-                case DEFAULT -> {
-                    if (messageText.startsWith(START)) {
-                        if (messageText.startsWith(START + " invite_")) {
-                            handleInvitation(chatId, userId, messageText);
-                        } else {
-                            startCommand(chatId);
-                        }
-                    } else if (messageText.startsWith(HELP)) {
-                        helpCommand(chatId);
-                    } else if (messageText.startsWith(JOIN)) {
-                        if (messageText.length() > JOIN.length()) {
-                            handleJoinGroup(chatId, userId, messageText);
-                        } else {
-                            joinCommand(chatId, userId);
-                        }
-                    } else if (messageText.startsWith(BACK_COMMAND)) {
-                        handleBackCommand(chatId, userId);
-                    } else if (messageText.startsWith(CREATE)) {
-                        if (messageText.length() > CREATE.length()) {
-                            handleCreateGroup(chatId, userId, messageText);
-                        } else {
-                            createCommand(chatId, userId);
-                        }
-                    } else {
-                        unknownCommand(chatId);
-                    }
-                }
-                case IN_THE_GROUP -> {
-                    String groupCode = userStateManager.getChosenGroup(chatId);
+        // register or find user
+        userService.findOrCreateUser(telegramUser);
 
+        // getting state
+        UserState userState = userStateManager.getState(chatId);
+
+        LOG.info("Processing message from chatId: {} with user state: {}", chatId, userState);
+
+        switch (userState) {
+            case DEFAULT -> handleDefaultState(chatId, userId, messageText);
+            case IN_THE_GROUP -> handleInGroupState(chatId, userId, messageText);
+            default -> unknownCommand(chatId);
+        }
+    }
+
+    private void handleInGroupState(Long chatId, Long userId, String messageText) {
+        String groupCode = userStateManager.getChosenGroup(chatId);
+
+        // displayGroup(chatId, groupCode);
+
+        switch (messageText) {
+            case HELP -> groupHelpCommand(chatId);
+            case BALANCE -> balanceCommand(chatId, groupCode);
+            default -> unknownCommand(chatId);
+        }
+    }
+
+    private void handleDefaultState(Long chatId, Long userId, String messageText) {
+
+        String command = messageText.split(" ")[0];
+
+        switch (command) {
+            case START -> {
+                if (messageText.startsWith(START + " invite_")) {
+                    handleInvitation(chatId, userId, messageText);
+                } else {
+                    startCommand(chatId);
                 }
             }
-
+            case HELP -> helpCommand(chatId);
+            case JOIN -> {
+                if (messageText.length() > JOIN.length()) {
+                    handleJoinGroup(chatId, userId, messageText);
+                } else {
+                    joinCommand(chatId, userId);
+                }
+            }
+            case BACK_COMMAND -> handleBackCommand(chatId);
+            case CREATE -> {
+                if (messageText.length() > CREATE.length()) {
+                    handleCreateGroup(chatId, userId, messageText);
+                } else {
+                    createCommand(chatId);
+                }
+            }
+            case GROUPS -> chooseGroup(chatId, userId);
+            default -> unknownCommand(chatId);
         }
+    }
+
+
+    private void chooseGroup(Long chatId, Long userId) {
+        List<Group> groups = groupService.getGroupsForUser(userId);
+        if (groups.isEmpty()) {
+            sendMessage(chatId, "You are not a part of any group yet!");
+        } else {
+            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            List<InlineKeyboardButton> row;
+            for (var group : groups) {
+                row = new ArrayList<>();
+                row.add(InlineKeyboardButton.builder()
+                                .text(group.getName())
+                                .callbackData(group.getId())
+                        .build());
+                rows.add(row);
+            }
+            inlineKeyboard.setKeyboard(rows);
+            var text = "Choose group:";
+
+            SendMessage message = SendMessage.builder()
+                    .chatId(String.valueOf(chatId))
+                    .text(text)
+                    .replyMarkup(inlineKeyboard)
+                    .build();
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                LOG.error("Error while getting from currency", e);
+            }
+        }
+    }
+
+    private void balanceCommand(Long chatId, String groupCode) {
+        Map<User, BigDecimal> balance = balanceService.calculateBalance(groupCode);
+        StringBuilder balanceText = new StringBuilder();
+        balanceText.append("Balance for your group is:\n\n");
+
+        for (Map.Entry<User, BigDecimal> entry : balance.entrySet()) {
+            User user = entry.getKey();
+            BigDecimal userBalance = entry.getValue();
+
+            balanceText.append(String.format("• %s: %s\n", user.getName(), userBalance));
+        }
+
+        String result = balanceText.toString();
+        sendMessage(chatId, result);
+    }
+
+    private void groupHelpCommand(Long chatId) { // TODO: create text for group help command
+        var text = """
+                Group commands:
+                
+                This is a TriCount bot! More description coming soon!
+                for now use commands:
+                /balance
+                /add_expense
+                /members
+                /help
+                """;
+        sendMessage(chatId, text);
+    }
+
+    private void displayGroup(Long chatId, String groupCode) {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                        .text("Balance of the group")
+                        .callbackData(BALANCE)
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Add expense")
+                .callbackData(ADD_EXPENSE)
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Group members")
+                .callbackData(MEMBERS)
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Help")
+                .callbackData(HELP)
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Return to main menu")
+                .callbackData(BACK_COMMAND)
+                .build());
+        rows.add(row);
+
+        var text = """
+                Welcome to you group %s!
+                Choose an option:
+                """.formatted(groupService.getGroupName(groupCode));
+        sendMessage(chatId, text);
     }
 
     private void createCommand(Long chatId, Long userId) {
