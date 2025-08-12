@@ -18,7 +18,15 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class Tr1CountBot extends TelegramLongPollingBot {
@@ -28,7 +36,7 @@ public class Tr1CountBot extends TelegramLongPollingBot {
     private static final String HELP = "/help";
     private static final String JOIN = "/join";
     private static final String CREATE = "/create";
-    private static final String ROOMS = "/rooms";
+    private static final String GROUPS = "/groups";
     private static final String BALANCE = "/balance";
     private static final String ADD_EXPENSE = "/add_expense";
     private static final String MEMBERS = "/members";
@@ -229,13 +237,13 @@ public class Tr1CountBot extends TelegramLongPollingBot {
         sendMessage(chatId, text);
     }
 
-    private void createCommand(Long chatId, Long userId) {
+    private void createCommand(Long chatId) {
         sendMessage(chatId, "To create a group type in a command /create [group_name]");
     }
 
     private void handleCreateGroup(Long chatId, Long userId, String input) {
         if (input.equalsIgnoreCase(BACK_BUTTON) || input.equalsIgnoreCase(BACK_COMMAND)) {
-            handleBackCommand(chatId, userId);
+            handleBackCommand(chatId);
             return;
         }
         String groupName = input.substring((CREATE + " ").length()).trim();
@@ -252,17 +260,18 @@ public class Tr1CountBot extends TelegramLongPollingBot {
         } catch (UserNotFoundException e) {
             userStateManager.setState(chatId, UserState.DEFAULT);
             sendMessage(chatId, "Unexpected error while creating group, try again later");
+            throw new UserNotFoundException("Problem while creating a group", e);
         }
     }
 
-    private void handleBackCommand(Long chatId, Long userId) {
+    private void handleBackCommand(Long chatId) {
         userStateManager.setState(chatId, UserState.DEFAULT);
         sendMessage(chatId, "You came back to main menu");
     }
 
     private void handleJoinGroup(Long chatId, Long userId, String input) {
         if (input.equalsIgnoreCase(BACK_BUTTON) || input.equalsIgnoreCase(BACK_COMMAND)) {
-            handleBackCommand(chatId, userId);
+            handleBackCommand(chatId);
             return;
         }
 
