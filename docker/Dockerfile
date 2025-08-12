@@ -3,11 +3,13 @@ FROM maven:3.9.4-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies
-COPY ../pom.xml .
+# Corrected path: copy from the build context root
+COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
 # Copy the entire project and build it
-COPY .. .
+# Corrected path: copy from the build context root
+COPY . .
 RUN mvn clean package -DskipTests
 
 # Use a lightweight JRE image to run the application
