@@ -57,12 +57,14 @@ public class BalanceServiceImpl implements BalanceService {
     private Expense saveExpense(String groupId, Long paidByUserId,
                                 String title, BigDecimal amount, LocalDateTime date) {
         Expense expense = new Expense();
-        expense.setGroup(groupRepository.findGroupById(groupId));
+        expense.setGroup(groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Expense can't be saved because group " + groupId + " doesn't exist")));
         expense.setAmount(amount);
         expense.setTitle(title);
         expense.setDate(date);
         expense.setCreatedAt(LocalDateTime.now());
-        expense.setPaidBy(userRepository.findUserByTelegramId(paidByUserId));
+        expense.setPaidBy(userRepository.findUserByTelegramId(paidByUserId)
+                .orElseThrow(() -> new UserNotFoundException("Can't set paidBy value for expense, because user " + paidByUserId + " doesn't exist")));
 
         return expenseRepository.save(expense);
     }
@@ -71,16 +73,18 @@ public class BalanceServiceImpl implements BalanceService {
     public Map<User, BigDecimal> calculateBalance(String groupId) {
         Map<User, BigDecimal> balance = new HashMap<>();
         List<User> members = userRepository.findUsersByGroup(groupId);
-        if (members == null) throw new UserNotFoundException("Can't find members of the group " + groupId);
+        if (members.isEmpty()) throw new UserNotFoundException("Can't find members of the group " + groupId);
         for (User user : members) { // finding every user in the group
             List<Expense> eList = expenseRepository.findExpensesByPaidByFromGroup(user, groupId); // find every expense of that user in the certain group
-            if (eList == null) throw new ExpenseNotFoundException("Can't find expenses of the user " + user.getTelegramId() + " for group " + groupId);
+            if (eList.isEmpty())
+                throw new ExpenseNotFoundException("Can't find expenses of the user " + user.getTelegramId() + " for group " + groupId);
             for (Expense e : eList) {
                 // here we take every expense of curr user, add full value of that expense to paidBy user
                 // then we take every expenseshare entity of that expense and subtract amount from each user associated with this expense
                 balance.put(user, balance.getOrDefault(user, BigDecimal.valueOf(0)).add(e.getAmount()));
                 List<ExpenseShare> esList = expenseShareRepository.findExpenseSharesByExpense(e); // get every es entity associated with this expense
-                if (esList == null) throw new ExpenseNotFoundException("Can't find expenseShared for expense " + e.getId());
+                if (esList.isEmpty())
+                    throw new ExpenseNotFoundException("Can't find expenseShared for expense " + e.getId());
                 for (ExpenseShare es : esList) {
                     balance.put(es.getUser(), balance.getOrDefault(es.getUser(), BigDecimal.valueOf(0)).subtract(es.getAmount()));
                 }
@@ -96,7 +100,8 @@ public class BalanceServiceImpl implements BalanceService {
                 .orElseThrow(() -> new ExpenseNotFoundException("Expense wasn't found"));
 
         updateDto.paidByUserId().ifPresent(newPaidByUserId -> {
-            User newPayer = userRepository.findUserByTelegramId(newPaidByUserId);
+            User newPayer = userRepository.findUserByTelegramId(newPaidByUserId)
+                    .orElseThrow(() -> new UserNotFoundException(String.format("Can't update expense %s, because newPayer %s doesn't exist", expenseId, newPaidByUserId)));
             expenseToUpdate.setPaidBy(newPayer);
         });
 
@@ -131,7 +136,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public List<Expense> getExpensesForGroup(String groupId) {
-        if (groupRepository.findGroupById(groupId) == null) throw new GroupNotFoundException("Can't find expenses for group " + groupId + ", because it doesn't exist");
-        return expenseRepository.getExpensesByGroup(groupRepository.findGroupById(groupId));
+        return expenseRepository.getExpensesByGroup(groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Can't find expenses for group " + groupId + ", because it doesn't exist")));
     }
 }

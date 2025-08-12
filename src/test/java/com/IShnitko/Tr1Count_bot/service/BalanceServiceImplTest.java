@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,8 +90,8 @@ class BalanceServiceImplTest {
     @DisplayName("addExpenseToGroup: Добавление расхода с несколькими участниками")
     void addExpenseToGroup_MultipleUsers_SavesCorrectly() {
         // Установка ожидаемого поведения репозиториев
-        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(group);
-        when(userRepository.findUserByTelegramId(1L)).thenReturn(user1);
+        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(Optional.ofNullable(group));
+        when(userRepository.findUserByTelegramId(1L)).thenReturn(Optional.ofNullable(user1));
         when(expenseRepository.save(any(Expense.class))).thenReturn(expense);
         when(expenseShareRepository.save(any(ExpenseShare.class))).thenReturn(new ExpenseShare());
 
@@ -113,8 +114,8 @@ class BalanceServiceImplTest {
     @DisplayName("addExpenseToGroup: Проверка округления доли при неравном делении")
     void addExpenseToGroup_UnevenDivision_RoundsDownCorrectly() {
         // Установка ожидаемого поведения репозиториев
-        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(group);
-        when(userRepository.findUserByTelegramId(1L)).thenReturn(user1);
+        when(groupRepository.findGroupById(String.valueOf(1L))).thenReturn(Optional.ofNullable(group));
+        when(userRepository.findUserByTelegramId(1L)).thenReturn(Optional.ofNullable(user1));
         when(expenseRepository.save(any(Expense.class))).thenReturn(expense);
 
         // Создаем mock для ExpenseShare, чтобы проверить сумму

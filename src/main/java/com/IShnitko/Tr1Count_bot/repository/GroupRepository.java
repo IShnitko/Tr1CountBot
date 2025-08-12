@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    Group findGroupById(String id);
+    Optional<Group> findGroupById(String id);
 
     Optional<Group> findGroupByName(String name);
 
@@ -19,5 +19,4 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     void deleteGroupById(String id);
 
-    Optional<Group> findByInvitationCode(String invitationCode);
 }
