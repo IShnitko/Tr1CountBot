@@ -3,12 +3,11 @@ package com.IShnitko.Tr1Count_bot.service;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.GroupMembership;
 import com.IShnitko.Tr1Count_bot.model.User;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 public interface GroupService {
-    Group createGroup(String name, User creator);
+    Group createGroup(String name, Long userId);
     GroupMembership addUserToGroup(String groupId, Long userId);
     GroupMembership joinGroupByInvitation(String invitationCode, Long userId);
     List<Group> getGroupsForUser(Long userId);
