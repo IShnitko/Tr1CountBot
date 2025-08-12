@@ -37,7 +37,7 @@ public class GroupServiceImpl implements GroupService {
     public Group createGroup(String name, Long userId) {
         Group group = new Group();
         while (true) {
-            String code = GroupCodeGenerator.generateCode(5);
+            String code = GroupCodeGenerator.generateCode(5); // TODO: update length to 10 or 12
             if (groupRepository.findGroupById(code) == null) {
                 group.setId(code);
                 break;
