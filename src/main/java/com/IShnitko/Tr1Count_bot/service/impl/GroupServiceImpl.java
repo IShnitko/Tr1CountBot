@@ -34,7 +34,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public Group createGroup(String name, User creator) {
+    public Group createGroup(String name, Long userId) {
         Group group = new Group();
         while (true) {
             String code = GroupCodeGenerator.generateCode(5);
