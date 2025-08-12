@@ -5,10 +5,10 @@ import java.security.SecureRandom;
 /**
  * Утилитарный класс для генерации случайных кодов для групп.
  */
-public class GroupCodeGenerator {
+public final class GroupCodeGenerator {
 
     // Набор символов для генерации кода: заглавные буквы и цифры.
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // TODO: maybe add special symbols and lowercase letters
+    private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     // Используем SecureRandom для криптографически надежной генерации случайных чисел.
     // Это лучший выбор, чем обычный Random, особенно если уникальность критически важна.
