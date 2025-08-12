@@ -4,6 +4,7 @@ import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserAlreadyInGroupException;
+import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import org.slf4j.Logger;
@@ -50,44 +51,69 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             Long chatId = update.getMessage().getChatId();
             Long userId = update.getMessage().getFrom().getId();
 
-            // Получаем текущее состояние пользователя
-            UserState currentState = userStateManager.getState(chatId);
+            UserState userState = userStateManager.getState(chatId);
 
-            // Обрабатываем ввод в зависимости от состояния
-            if (currentState == UserState.AWAITING_GROUP_CODE) {
-                handleJoinGroup(chatId, userId, messageText);
-            } else {
-                // Если состояние - DEFAULT, обрабатываем как обычную команду
-                if (messageText.startsWith(START + " invite_")) {
-                    handleInvitation(chatId, userId, messageText);
-                } else {
-                    switch (messageText) {
-                        case START:
+            switch (userState) {
+                case DEFAULT -> {
+                    if (messageText.startsWith(START)) {
+                        if (messageText.startsWith(START + " invite_")) {
+                            handleInvitation(chatId, userId, messageText);
+                        } else {
                             startCommand(chatId);
-                            break;
-                        case HELP:
-                            helpCommand(chatId);
-                            break;
-                        case JOIN:
+                        }
+                    } else if (messageText.startsWith(HELP)) {
+                        helpCommand(chatId);
+                    } else if (messageText.startsWith(JOIN)) {
+                        if (messageText.length() > JOIN.length()) {
+                            handleJoinGroup(chatId, userId, messageText);
+                        } else {
                             joinCommand(chatId, userId);
-                            break;
-                        case BACK_COMMAND:
-                            handleBackCommand(chatId, userId);
-                            break;
-                        case CREATE:
+                        }
+                    } else if (messageText.startsWith(BACK_COMMAND)) {
+                        handleBackCommand(chatId, userId);
+                    } else if (messageText.startsWith(CREATE)) {
+                        if (messageText.length() > CREATE.length()) {
+                            handleCreateGroup(chatId, userId, messageText);
+                        } else {
                             createCommand(chatId, userId);
-                        // TODO: implement other commands
-                        default:
-                            unknownCommand(chatId);
-                            break;
+                        }
+                    } else {
+                        unknownCommand(chatId);
                     }
                 }
+                case IN_THE_GROUP -> {
+                    String groupCode = userStateManager.getChosenGroup(chatId);
+
+                }
             }
+
         }
     }
 
     private void createCommand(Long chatId, Long userId) {
         sendMessage(chatId, "To create a group type in a command /create [group_name]");
+    }
+
+    private void handleCreateGroup(Long chatId, Long userId, String input) {
+        if (input.equalsIgnoreCase(BACK_BUTTON) || input.equalsIgnoreCase(BACK_COMMAND)) {
+            handleBackCommand(chatId, userId);
+            return;
+        }
+        String groupName = input.substring((CREATE + " ").length()).trim();
+        try {
+            var group = groupService.createGroup(groupName, userId);
+
+            userStateManager.setState(chatId, UserState.DEFAULT);
+            var text = """
+                    You successfully created a group %s!
+                    Invite your friends through this link: https://t.me/Tr1Count_bot?start=invite_%s or through /join %s
+                    """.formatted(groupName, group.getInvitationCode(), group.getId());
+            userStateManager.setState(chatId, group.getId());
+            sendMessage(chatId, text);
+        } catch (UserNotFoundException e) {
+            userStateManager.setState(chatId, UserState.DEFAULT);
+            sendMessage(chatId, "Unexpected error while creating group, try again later");
+        }
     }
 
     private void handleBackCommand(Long chatId, Long userId) {
@@ -101,11 +127,12 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             return;
         }
 
-        String groupCode = input.trim();
+        String groupCode = input.substring((JOIN + " ").length()).trim();
+
         try {
             groupService.joinGroupByInvitation(groupCode, userId);
 
-            userStateManager.setState(chatId, UserState.DEFAULT);
+            userStateManager.setState(chatId, groupCode);
             sendMessage(chatId, "You successfully joined group '" + groupCode + "'.");
 
         } catch (GroupNotFoundException e) {
@@ -119,14 +146,16 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             userStateManager.setState(chatId, UserState.DEFAULT);
         }
     }
+
     private void handleInvitation(Long chatId, Long userId, String messageText) {
         String invitationCode = messageText.substring((START + " invite_").length());
 
         try {
             groupService.joinGroupByInvitation(invitationCode, userId);
+//            userStateManager.setState(chatId, groupService.get); // TODO: get rid of invitation code and just use id always
             sendMessage(chatId, "You successfully joined group " + invitationCode + "!");
         } catch (GroupNotFoundException e) {
-            sendMessage(chatId, "Group with code. Please check the code or try again");
+            sendMessage(chatId, "Group with code " + invitationCode + " wasn't found. Please check the code or try again");
         } catch (UserAlreadyInGroupException e) {
             sendMessage(chatId, "You are already a part of this group");
         } catch (Exception e) {
@@ -139,13 +168,16 @@ public class Tr1CountBot extends TelegramLongPollingBot {
     private void startCommand(Long chatId) {
         sendMessage(chatId, "Hi! I am your TriCount bot.");
     }
+
     private void unknownCommand(Long chatId) {
         var text = "Unknown command.";
         sendMessage(chatId, text);
     }
+
     private void joinCommand(Long chatId, Long userId) {
         sendMessage(chatId, "To join a group type in a command '/join [group_code]'.");
     }
+
     private void sendMessage(Long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
