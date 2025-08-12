@@ -69,30 +69,53 @@ public class BalanceServiceImpl implements BalanceService {
         return expenseRepository.save(expense);
     }
 
+    /**
+     * Correctly calculates the balance for all members of a group.
+     *
+     * @param groupId the unique identifier of the group
+     * @return a Map where the key is the group member and the value is their final balance
+     */
     @Override
     public Map<User, BigDecimal> calculateBalance(String groupId) {
-        Map<User, BigDecimal> balance = new HashMap<>();
+        // Get all members of the group
         List<User> members = userRepository.findUsersByGroup(groupId);
-        if (members.isEmpty()) throw new UserNotFoundException("Can't find members of the group " + groupId);
-        for (User user : members) { // finding every user in the group
-            List<Expense> eList = expenseRepository.findExpensesByPaidByFromGroup(user, groupId); // find every expense of that user in the certain group
-            if (eList.isEmpty())
-                throw new ExpenseNotFoundException("Can't find expenses of the user " + user.getTelegramId() + " for group " + groupId);
-            for (Expense e : eList) {
-                // here we take every expense of curr user, add full value of that expense to paidBy user
-                // then we take every expenseshare entity of that expense and subtract amount from each user associated with this expense
-                balance.put(user, balance.getOrDefault(user, BigDecimal.valueOf(0)).add(e.getAmount()));
-                List<ExpenseShare> esList = expenseShareRepository.findExpenseSharesByExpense(e); // get every es entity associated with this expense
-                if (esList.isEmpty())
-                    throw new ExpenseNotFoundException("Can't find expenseShared for expense " + e.getId());
-                for (ExpenseShare es : esList) {
-                    balance.put(es.getUser(), balance.getOrDefault(es.getUser(), BigDecimal.valueOf(0)).subtract(es.getAmount()));
-                }
+        if (members.isEmpty()) {
+            throw new UserNotFoundException("Can't find members of the group " + groupId);
+        }
 
+        // Initialize the balance for all members to zero.
+        // This ensures that every member will be displayed in the final balance,
+        // even if they have not spent or participated in anything.
+        Map<User, BigDecimal> balance = new HashMap<>();
+        for (User user : members) {
+            balance.put(user, BigDecimal.ZERO);
+        }
+
+        // Get all expenses related to this group
+        // This is much more efficient than querying inside a loop
+        List<Expense> allExpenses = expenseRepository.findExpensesByGroup(
+                groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Can't find expenses for the group " + groupId)));
+
+        // Process each expense
+        for (Expense expense : allExpenses) {
+            // Add the full amount of the expense to the user who paid
+            User paidBy = expense.getPaidBy();
+            balance.computeIfPresent(paidBy, (user, currentBalance) -> currentBalance.add(expense.getAmount()));
+
+            // Get the shares for the current expense
+            List<ExpenseShare> expenseShares = expenseShareRepository.findExpenseSharesByExpense(expense);
+
+            // Subtract the share amount from each participating user
+            for (ExpenseShare share : expenseShares) {
+                User user = share.getUser();
+                balance.computeIfPresent(user, (u, currentBalance) -> currentBalance.subtract(share.getAmount()));
             }
         }
+
         return balance;
     }
+
 
     @Override
     public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
