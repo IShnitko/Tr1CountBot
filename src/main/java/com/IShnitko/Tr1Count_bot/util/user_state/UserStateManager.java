@@ -14,13 +14,13 @@ public class UserStateManager {
         userStates.put(chatId, state);
     }
 
-    public void setState(Long chatId, String groupId){
-        userStates.put(chatId, UserState.IN_THE_GROUP);
+    public void setStateWithChosenGroup(Long chatId, UserState state, String groupId){
+        userStates.put(chatId, state);
         chosenGroups.put(chatId, groupId);
     }
 
     public UserState getState(Long chatId) {
-        return userStates.getOrDefault(chatId, null);
+        return userStates.getOrDefault(chatId, UserState.DEFAULT);
     }
 
     public String getChosenGroup(Long chatId) {
