@@ -1,7 +1,10 @@
 package com.IShnitko.Tr1Count_bot.bot;
 
+import com.IShnitko.Tr1Count_bot.model.Group;
+import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
+import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserAlreadyInGroupException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
@@ -34,14 +37,16 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
     private final GroupService groupService;
     private final BalanceService balanceService;
+    private final UserService userService;
     private final UserStateManager userStateManager;
 
     @Autowired
-    public Tr1CountBot(@Value("${bot.token}") String botToken, GroupService groupService, BalanceService balanceService, UserStateManager userStateManager) {
+    public Tr1CountBot(@Value("${bot.token}") String botToken, GroupService groupService, BalanceService balanceService, UserStateManager userStateManager, UserService userService) {
         super(botToken);
         this.groupService = groupService;
         this.balanceService = balanceService;
         this.userStateManager = userStateManager;
+        this.userService = userService;
     }
 
     @Override
