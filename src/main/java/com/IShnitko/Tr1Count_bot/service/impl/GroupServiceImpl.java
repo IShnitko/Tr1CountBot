@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -68,7 +67,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public GroupMembership joinGroupByInvitation(String groupId, Long userId) {
+    public GroupMembership joinGroupById(String groupId, Long userId) {
 
         Group group = groupRepository.findGroupById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException("Group with code '" + groupId + "' not found."));

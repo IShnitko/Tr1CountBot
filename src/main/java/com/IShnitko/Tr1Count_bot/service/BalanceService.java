@@ -14,4 +14,4 @@ public interface BalanceService {
     Map<User, BigDecimal> calculateBalance(String groupId);
     Expense updateExpense(Long expenseId, UpdateExpenseDto updateExpenseDto);
     List<Expense> getExpensesForGroup(String groupId);
-} // TODO: probably create DTO object for expense because user must be able to update it
+}
