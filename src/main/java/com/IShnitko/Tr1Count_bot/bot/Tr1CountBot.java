@@ -107,8 +107,8 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             var text = """
                     You successfully created a group %s!
                     Invite your friends through this link: https://t.me/Tr1Count_bot?start=invite_%s or through /join %s
-                    """.formatted(groupName, group.getInvitationCode(), group.getId());
-            userStateManager.setState(chatId, group.getId());
+                    """.formatted(groupName, group.getId(), group.getId());
+            userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, group.getId());
             sendMessage(chatId, text);
         } catch (UserNotFoundException e) {
             userStateManager.setState(chatId, UserState.DEFAULT);
@@ -130,9 +130,9 @@ public class Tr1CountBot extends TelegramLongPollingBot {
         String groupCode = input.substring((JOIN + " ").length()).trim();
 
         try {
-            groupService.joinGroupByInvitation(groupCode, userId);
+            groupService.joinGroupById(groupCode, userId);
 
-            userStateManager.setState(chatId, groupCode);
+            userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupCode);
             sendMessage(chatId, "You successfully joined group '" + groupCode + "'.");
 
         } catch (GroupNotFoundException e) {
@@ -148,14 +148,14 @@ public class Tr1CountBot extends TelegramLongPollingBot {
     }
 
     private void handleInvitation(Long chatId, Long userId, String messageText) {
-        String invitationCode = messageText.substring((START + " invite_").length());
+        String groupId = messageText.substring((START + " invite_").length());
 
         try {
-            groupService.joinGroupByInvitation(invitationCode, userId);
-//            userStateManager.setState(chatId, groupService.get); // TODO: get rid of invitation code and just use id always
-            sendMessage(chatId, "You successfully joined group " + invitationCode + "!");
+            groupService.joinGroupById(groupId, userId);
+            userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupId);
+            sendMessage(chatId, "You successfully joined group " + groupId + "!");
         } catch (GroupNotFoundException e) {
-            sendMessage(chatId, "Group with code " + invitationCode + " wasn't found. Please check the code or try again");
+            sendMessage(chatId, "Group with code " + groupId + " wasn't found. Please check the code or try again");
         } catch (UserAlreadyInGroupException e) {
             sendMessage(chatId, "You are already a part of this group");
         } catch (Exception e) {
