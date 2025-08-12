@@ -27,9 +27,8 @@ CREATE TABLE users
 -- Таблица групп
 CREATE TABLE groups
 (
-    id                 BIGSERIAL PRIMARY KEY,
+    id                 VARCHAR(10) PRIMARY KEY,
     name               VARCHAR(200) NOT NULL,
-    invitation_code    VARCHAR(10)  NOT NULL UNIQUE, -- TODO: get rid of invitation code, just use id for everything, change id to string
     created_by_user_id BIGINT       NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

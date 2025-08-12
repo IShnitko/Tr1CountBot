@@ -9,7 +9,7 @@ import java.util.List;
 public interface GroupService {
     Group createGroup(String name, Long userId);
     GroupMembership addUserToGroup(String groupId, Long userId);
-    GroupMembership joinGroupByInvitation(String invitationCode, Long userId);
+    GroupMembership joinGroupByInvitation(String groupId, Long userId);
     List<Group> getGroupsForUser(Long userId);
     void deleteUserFromGroup(String groupId, Long userId);
     List<User> getUsersForGroup(String groupId);

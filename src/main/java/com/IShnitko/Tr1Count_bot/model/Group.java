@@ -21,9 +21,6 @@ public class Group {
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
 
-    @Column(name = "invitation_code", unique = true, nullable = false)
-    private String invitationCode;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
