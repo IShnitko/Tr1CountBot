@@ -37,7 +37,7 @@ CREATE TABLE groups
 CREATE TABLE group_memberships
 (
     id        BIGSERIAL PRIMARY KEY,
-    group_id  BIGINT NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+    group_id  VARCHAR(10) NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     user_id   BIGINT NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (group_id, user_id) -- Один пользователь - одна запись в группе
@@ -47,7 +47,7 @@ CREATE TABLE group_memberships
 CREATE TABLE expenses
 (
     id              BIGSERIAL PRIMARY KEY,
-    group_id        BIGINT         NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+    group_id        VARCHAR(10)         NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     paid_by_user_id BIGINT         NOT NULL REFERENCES users (telegram_id) ON DELETE CASCADE,
     title           VARCHAR(200)   NOT NULL,
     amount          NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
