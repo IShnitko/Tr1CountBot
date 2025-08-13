@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -26,7 +27,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class Tr1CountBot extends TelegramLongPollingBot {
@@ -59,34 +59,74 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage() || !update.getMessage().hasText()) {
-            return;
+//        if (!update.hasMessage() || !update.getMessage().hasText()) {
+//            LOG.info("Returned");
+//            return;
+//        }
+        Long chatId = null;
+        Long userId = null;
+        org.telegram.telegrambots.meta.api.objects.User telegramUser = null;
+        UserState userState = null;
+
+        if (update.hasMessage() && update.getMessage().hasText()) { // case 1: update has message
+            telegramUser = update.getMessage().getFrom();
+            chatId = update.getMessage().getChatId();
+            String messageText = update.getMessage().getText();
+            userId = telegramUser.getId();
+
+            // register or find user
+            userService.findOrCreateUser(telegramUser);
+
+            // getting state
+            userState = userStateManager.getState(chatId);
+
+            LOG.info("Processing message from chatId: {} with user state: {}", chatId, userState);
+
+            switch (userState) {
+                case DEFAULT -> handleDefaultState(chatId, userId, messageText, update);
+                case IN_THE_GROUP -> handleInGroupState(chatId, userId, messageText, update);
+                default -> unknownCommand(chatId);
+            }
+        } else { // case 2: update has callbackQuery
+            LOG.info("Processing a callback query...");
+            chatId = update.getCallbackQuery().getMessage().getChatId();
+            telegramUser = update.getCallbackQuery().getFrom();
+            userId = telegramUser.getId();
+            userService.findOrCreateUser(telegramUser);
+            userState = userStateManager.getState(chatId);
+            LOG.info("Processing callback from chatId: {} with user state: {}", chatId, userState);
+            switch (userState) {
+                case AWAITING_GROUP_ID -> {
+                    try {
+                        handleAwaitingGroupIdState(chatId, update);
+                    } catch (TelegramApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                default -> unknownCommand(chatId);
+            }
         }
 
-        org.telegram.telegrambots.meta.api.objects.User telegramUser = update.getMessage().getFrom();
-        Long chatId = update.getMessage().getChatId();
-        String messageText = update.getMessage().getText();
-        Long userId = telegramUser.getId();
+    }
 
-        // register or find user
-        userService.findOrCreateUser(telegramUser);
-
-        // getting state
-        UserState userState = userStateManager.getState(chatId);
-
-        LOG.info("Processing message from chatId: {} with user state: {}", chatId, userState);
-
-        switch (userState) {
-            case DEFAULT -> handleDefaultState(chatId, userId, messageText);
-            case IN_THE_GROUP -> handleInGroupState(chatId, userId, messageText);
-            default -> unknownCommand(chatId);
+    private void handleAwaitingGroupIdState(Long chatId, Update update) throws TelegramApiException {
+        if (update.hasCallbackQuery()) {
+            String groupId = update.getCallbackQuery().getData();
+            LOG.info("Callback data: {}", groupId);
+            userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupId);
+            execute(DeleteMessage.builder()
+                    .chatId(String.valueOf(chatId))
+                    .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                    .build());
+            displayGroup(chatId, groupId);
+        } else {
+            LOG.error("Error while setting groupId");
         }
     }
 
-    private void handleInGroupState(Long chatId, Long userId, String messageText) {
+    private void handleInGroupState(Long chatId, Long userId, String messageText, Update update) {
         String groupCode = userStateManager.getChosenGroup(chatId);
 
-        // displayGroup(chatId, groupCode);
 
         switch (messageText) {
             case HELP -> groupHelpCommand(chatId);
@@ -95,7 +135,7 @@ public class Tr1CountBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleDefaultState(Long chatId, Long userId, String messageText) {
+    private void handleDefaultState(Long chatId, Long userId, String messageText, Update update) {
 
         String command = messageText.split(" ")[0];
 
@@ -140,8 +180,8 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             for (var group : groups) {
                 row = new ArrayList<>();
                 row.add(InlineKeyboardButton.builder()
-                                .text(group.getName())
-                                .callbackData(group.getId())
+                        .text(group.getName())
+                        .callbackData(group.getId())
                         .build());
                 rows.add(row);
             }
@@ -153,10 +193,13 @@ public class Tr1CountBot extends TelegramLongPollingBot {
                     .text(text)
                     .replyMarkup(inlineKeyboard)
                     .build();
+
+            userStateManager.setState(chatId, UserState.AWAITING_GROUP_ID);
+
             try {
                 execute(message);
             } catch (TelegramApiException e) {
-                LOG.error("Error while getting from currency", e);
+                LOG.error("Error while choosing group", e);
             }
         }
     }
@@ -197,8 +240,8 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
         List<InlineKeyboardButton> row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
-                        .text("Balance of the group")
-                        .callbackData(BALANCE)
+                .text("Balance of the group")
+                .callbackData(BALANCE)
                 .build());
         rows.add(row);
 
@@ -229,12 +272,22 @@ public class Tr1CountBot extends TelegramLongPollingBot {
                 .callbackData(BACK_COMMAND)
                 .build());
         rows.add(row);
-
+        inlineKeyboard.setKeyboard(rows);
         var text = """
-                Welcome to you group %s!
+                Welcome to your group %s!
                 Choose an option:
                 """.formatted(groupService.getGroupName(groupCode));
-        sendMessage(chatId, text);
+        SendMessage message = SendMessage.builder()
+                .chatId(String.valueOf(chatId))
+                .text(text)
+                .replyMarkup(inlineKeyboard)
+                .build();
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            LOG.error("Error while choosing group", e);
+        }
     }
 
     private void createCommand(Long chatId) {
@@ -257,6 +310,7 @@ public class Tr1CountBot extends TelegramLongPollingBot {
                     """.formatted(groupName, group.getId(), group.getId());
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, group.getId());
             sendMessage(chatId, text);
+            displayGroup(chatId, group.getId()); // TODO: combine messages
         } catch (UserNotFoundException e) {
             userStateManager.setState(chatId, UserState.DEFAULT);
             sendMessage(chatId, "Unexpected error while creating group, try again later");
@@ -282,7 +336,7 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupCode);
             sendMessage(chatId, "You successfully joined group '" + groupCode + "'.");
-
+            displayGroup(chatId, groupCode);
         } catch (GroupNotFoundException e) {
             sendMessage(chatId, "Group with code '" + groupCode + "' wasn't found. Try again or press '" + BACK_BUTTON + "'.");
         } catch (UserAlreadyInGroupException e) {
@@ -302,6 +356,7 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             groupService.joinGroupById(groupId, userId);
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupId);
             sendMessage(chatId, "You successfully joined group " + groupId + "!");
+            displayGroup(chatId, groupId);
         } catch (GroupNotFoundException e) {
             sendMessage(chatId, "Group with code " + groupId + " wasn't found. Please check the code or try again");
         } catch (UserAlreadyInGroupException e) {
