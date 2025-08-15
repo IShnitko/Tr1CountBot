@@ -12,7 +12,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("select e from Expense e where e.paidBy = :paidBy and e.group.id = :groupId")
     List<Expense> findExpensesByPaidByFromGroup(User paidBy, String groupId);
 
-    List<Expense> getExpensesByGroup(Group group);
-
-    List<Expense> findExpensesByGroup(Group group);
+    List<Expense> findExpensesByGroupId(String groupId);
 }
