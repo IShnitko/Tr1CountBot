@@ -26,4 +26,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "join GroupMembership gm on gm.user = u " +
             "where gm.group.id = :groupId")
     List<User> findUsersByGroup(String groupId);
+
+    boolean existsByTelegramId(Long userId);
 }
