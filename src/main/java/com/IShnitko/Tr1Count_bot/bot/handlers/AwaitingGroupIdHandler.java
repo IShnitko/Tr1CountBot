@@ -36,12 +36,6 @@ public class AwaitingGroupIdHandler implements StateHandler {
             return;
         }
 
-        // Verify user belongs to selected group
-//        if (!groupService.userBelongsToGroup(userId, groupId)) {
-//            bot.sendMessage(context.getChatId(), "❌ You don't have access to this group");
-//            return;
-//        }
-
         // Update state and show group menu
         handleValidSelection(context, groupId);
     }
