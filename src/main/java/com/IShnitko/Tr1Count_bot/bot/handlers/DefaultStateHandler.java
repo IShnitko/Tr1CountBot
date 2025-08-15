@@ -101,26 +101,8 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleCreate(ChatContext context, String input) {
-        if (context.getUpdateType() == ChatContext.UpdateType.MESSAGE && input.length() > CREATE.length()) {
-            String groupName = input.substring(CREATE.length()).trim();
-            createGroup(context, groupName);
-        } else {
-            messageService.sendMessage(context.getChatId(), "Enter group name:");
-            // Можно установить состояние ожидания названия
-        }
-    }
-
-    private void createGroup(ChatContext context, String groupName) {
-        try {
-            Group group = groupService.createGroup(groupName, context.getUser().getId());
-            userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, group.getId());
-
-            String text = "Group created! Invite link: https://t.me/yourbot?start=invite_" + group.getId();
-            messageService.sendMessage(context.getChatId(), text);
-            groupManagementService.displayGroup(context.getChatId(), group.getId());
-        } catch (UserNotFoundException e) {
-            messageService.sendMessage(context.getChatId(), "Error creating group");
-        }
+        messageService.sendMessage(context.getChatId(), "Enter group name:", keyboardFactory.returnButton());
+        userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_NAME);
     }
 
     private void chooseGroup(ChatContext context) {
