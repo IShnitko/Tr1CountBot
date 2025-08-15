@@ -13,7 +13,9 @@ import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserAlreadyInGroupException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,112 +23,126 @@ import java.util.List;
 @Service
 public class GroupServiceImpl implements GroupService {
 
+    private static final int MAX_CODE_GENERATION_ATTEMPTS = 10;
+
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final GroupMembershipRepository groupMembershipRepository;
 
     @Autowired
-    public GroupServiceImpl(GroupRepository groupRepository, UserRepository userRepository, GroupMembershipRepository groupMembershipRepository) {
+    public GroupServiceImpl(GroupRepository groupRepository,
+                            UserRepository userRepository,
+                            GroupMembershipRepository groupMembershipRepository) {
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.groupMembershipRepository = groupMembershipRepository;
     }
 
     @Override
+    @Transactional
     public Group createGroup(String name, Long userId) {
+        User creator = userRepository.findUserByTelegramId(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        String code = generateUniqueGroupCode();
+
         Group group = new Group();
-        String code;
-        do {
-            code = GroupCodeGenerator.generateCode(10);
-        } while (groupRepository.findGroupById(code).isPresent());
         group.setId(code);
         group.setName(name);
         group.setCreatedAt(LocalDateTime.now());
-        group.setCreatedBy(userRepository.findUserByTelegramId(userId)
-                .orElseThrow(() -> new UserNotFoundException("Creator of the group couldn't be set")));
-        return groupRepository.save(group);
+        group.setCreatedBy(creator);
+
+        try {
+            return groupRepository.save(group);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("Failed to create group after generating unique code", e);
+        }
+    }
+
+    private String generateUniqueGroupCode() {
+        for (int i = 0; i < MAX_CODE_GENERATION_ATTEMPTS; i++) {
+            String code = GroupCodeGenerator.generateCode(10);
+            if (groupRepository.findGroupById(code).isEmpty()) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("Failed to generate unique group code after " + MAX_CODE_GENERATION_ATTEMPTS + " attempts");
     }
 
     @Override
-    public GroupMembership addUserToGroup(String groupId, Long userId) {
-        Group group = groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't add user to group, because group "+ groupId +" doesn't exist"));
-        User user = userRepository.findUserByTelegramId(userId)
-                .orElseThrow(() -> new UserNotFoundException("Can't add user to group, because user " + userId + " doesn't exist"));
-
-        GroupMembership gm = new GroupMembership();
-        gm.setGroup(group);
-        gm.setUser(user);
-        gm.setJoinedAt(LocalDateTime.now());
-
-        var potentialGMByGroup = groupMembershipRepository.findUsersByGroup(group);
-        if (potentialGMByGroup.contains(user)) return null;
-
-        return groupMembershipRepository.save(gm);
-    }
-
-    @Override
+    @Transactional
     public GroupMembership joinGroupById(String groupId, Long userId) {
 
-        Group group = groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Group with code '" + groupId + "' not found."));
-
-        User user = userRepository.findUserByTelegramId(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID '" + userId + "' not found."));
-
-        if (groupMembershipRepository.findUsersByGroup(group).contains(user)) {
-            throw new UserAlreadyInGroupException("User "+ userId +" is already in group " + group.getId());
+        if (groupMembershipRepository.existsByGroupIdAndUser_TelegramId(groupId, userId)) {
+            throw new UserAlreadyInGroupException("User " + userId + " is already in group " + groupId);
         }
 
         GroupMembership membership = new GroupMembership();
-        membership.setGroup(group);
-        membership.setUser(user);
+        membership.setGroup(groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Can't create GroupMembership, because group %s doesn't exist".formatted(groupId)))); // Proxy entity
+        membership.setUser(userRepository.findUserByTelegramId(userId)
+                .orElseThrow(() -> new UserNotFoundException("Can't create GroupMembership, because user %s doesn't exist".formatted(userId))));    // Proxy entity
         membership.setJoinedAt(LocalDateTime.now());
 
         return groupMembershipRepository.save(membership);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Group> getGroupsForUser(Long userId) {
-        return  groupMembershipRepository.findGroupsByUser(
-                userRepository.findUserByTelegramId(userId)
-                        .orElseThrow(() -> new UserNotFoundException("Can't get groups for user, because user " + userId + " doesn't exist")));
+        return groupMembershipRepository.findGroupsByUserId(userId);
     }
 
     @Override
+    @Transactional
     public void deleteUserFromGroup(String groupId, Long userId) {
-        User creator = userRepository.findCreatorOfGroup(groupId)
-                .orElseThrow(() -> new UserNotFoundException("Can't find creator of the group " + groupId));
-        User user = userRepository.findUserByTelegramId(userId)
-                .orElseThrow(() -> new UserNotFoundException("User "+ userId +" doesn't exist in this group"));
-        if (creator.equals(user)) throw new CreatorDeletionException(String.format("Can't delete creator %s of the group %s",userId, groupId));
-        groupMembershipRepository.deleteGroupMembershipByUser(user);
+        // Проверяем, является ли пользователь создателем группы
+        Long creatorId = groupRepository.findCreatorIdByGroupId(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Group not found: " + groupId));
+
+        if (creatorId.equals(userId)) {
+            throw new CreatorDeletionException("Cannot delete creator from group");
+        }
+
+        // Удаляем членство
+        int deleted = groupMembershipRepository.deleteByGroupIdAndUser_TelegramId(groupId, userId);
+        if (deleted == 0) {
+            throw new UserNotFoundException("User not found in group: " + userId);
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<User> getUsersForGroup(String groupId) {
-        return groupMembershipRepository.findUsersByGroup(groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't get members of the group, because group "+ groupId +" doesn't exist")));
+        groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Can't get users for group %s, because it doesn't exits".formatted(groupId)));
+        return groupMembershipRepository.findUsersByGroupId(groupId);
     }
 
     @Override
+    @Transactional
     public Group updateGroupName(String groupId, String newName) {
         Group group = groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't update group name, because group "+ groupId +" doesn't exist"));
+                .orElseThrow(() -> new GroupNotFoundException("Group not found: " + groupId));
+
         group.setName(newName);
         return groupRepository.save(group);
     }
 
     @Override
+    @Transactional
     public void deleteGroup(String groupId) {
-        if (groupRepository.findGroupById(groupId).isEmpty()) throw new GroupNotFoundException("Group "+ groupId +" that is being deleted doesn't exist");
+        groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Can't delete group %s, because it doesn't exits".formatted(groupId)));
+
         groupRepository.deleteGroupById(groupId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getGroupName(String groupId) {
         return groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't get group name, because group "+ groupId +" doesn't exist"))
+                .orElseThrow(() -> new GroupNotFoundException("Group not found: " + groupId))
                 .getName();
     }
 }
