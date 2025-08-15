@@ -1,5 +1,6 @@
 package com.IShnitko.Tr1Count_bot.bot.handlers;
 
+import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
@@ -30,6 +31,7 @@ public class InGroupStateHandler implements StateHandler {
     private final UserStateManager userStateManager;
     private final BalanceService balanceService;
     private final GroupService groupService;
+    private final KeyboardFactory keyboardFactory;
 
 
     @Override
@@ -57,10 +59,8 @@ public class InGroupStateHandler implements StateHandler {
 
     private void handleBalance(ChatContext context, String groupId) {
         try {
-            // Получаем форматированный баланс
             String balanceText = balanceService.getBalanceText(groupId);
 
-            // Отправляем сообщение с балансом
             messageService.sendMessage(context.getChatId(), balanceText);
         } catch (Exception e) {
             messageService.sendMessage(context.getChatId(), "❌ Error calculating balance");
@@ -90,17 +90,10 @@ public class InGroupStateHandler implements StateHandler {
 
     private void handleMembers(ChatContext context, String groupId) {
         try {
-            // Получаем участников группы
             List<User> members = groupService.getUsersForGroup(groupId);
 
-            // Форматируем список участников
-            StringBuilder sb = new StringBuilder("👥 *Group Members*\n\n");
-            for (int i = 0; i < members.size(); i++) {
-                sb.append(i + 1).append(". ").append(members.get(i).getName()).append("\n");
-            }
-
-            // Отправляем сообщение
-            messageService.sendMessage(context.getChatId(), sb.toString());
+            messageService.sendMessage(context.getChatId(), "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members));
+            userStateManager.setState(context.getChatId(), UserState.MEMBERS_MENU);
         } catch (Exception e) {
             messageService.sendMessage(context.getChatId(), "❌ Error retrieving members");
         }

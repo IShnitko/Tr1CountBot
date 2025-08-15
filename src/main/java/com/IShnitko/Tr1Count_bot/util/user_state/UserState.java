@@ -6,4 +6,5 @@ public enum UserState {
     IN_THE_GROUP,
     AWAITING_GROUP_NAME,
     ADDING_EXPENSE
+    MEMBERS_MENU
 }
