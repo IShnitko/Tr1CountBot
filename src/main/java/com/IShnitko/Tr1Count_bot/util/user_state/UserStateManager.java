@@ -36,4 +36,7 @@ public class UserStateManager {
         chosenGroups.remove(chatId);
     }
 
+    public void clearChosenGroup(Long chatId) {
+        chosenGroups.remove(chatId);
+    }
 }
