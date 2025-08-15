@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -30,25 +31,27 @@ public class MessageServiceImpl implements MessageService {
     public void sendMessage(Long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
+//                .parseMode(ParseMode.MARKDOWNV2)
                 .text(text)
                 .build();
         try {
             bot.execute(message); // Use the injected bot instance
         } catch (TelegramApiException e) {
-            // Log the error
+            // TODO: Log the error
         }
     }
 
-    public void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) {
+    public void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) { // TODO: implement markdown
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(text)
                 .replyMarkup(keyboard)
+//                .parseMode(ParseMode.MARKDOWNV2)
                 .build();
         try {
             bot.execute(message); // Use the injected bot instance
         } catch (TelegramApiException e) {
-            // Log the error
+            // TODO: Log the error
         }
     }
 
