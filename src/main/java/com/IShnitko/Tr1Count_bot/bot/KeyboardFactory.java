@@ -47,12 +47,6 @@ public class KeyboardFactory {
                 .build());
         rows.add(row);
 
-        row = new ArrayList<>();
-        row.add(InlineKeyboardButton.builder()
-                .text("Return to main menu")
-                .callbackData(BACK_COMMAND)
-                .build());
-        rows.add(row);
         inlineKeyboard.setKeyboard(rows);
         return inlineKeyboard;
     }
@@ -113,6 +107,19 @@ public class KeyboardFactory {
         }
         inlineKeyboard.setKeyboard(rows);
 
+        return inlineKeyboard;
+    }
+
+    public InlineKeyboardMarkup returnButton() {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Return to main menu")
+                .callbackData(BACK_COMMAND)
+                .build());
+        rows.add(row);
+        inlineKeyboard.setKeyboard(rows);
         return inlineKeyboard;
     }
 }
