@@ -13,5 +13,6 @@ public interface BalanceService {
     Expense addExpenseToGroup(String groupId, List<User> sharedUsers, Long paidByUserId, String title, BigDecimal amount, LocalDateTime date);
     Map<User, BigDecimal> calculateBalance(String groupId);
     Expense updateExpense(Long expenseId, UpdateExpenseDto updateExpenseDto);
+    String getBalanceText(String groupId);
     List<Expense> getExpensesForGroup(String groupId);
 }

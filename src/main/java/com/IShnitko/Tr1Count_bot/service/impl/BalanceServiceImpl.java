@@ -15,13 +15,13 @@ import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BalanceServiceImpl implements BalanceService {
@@ -32,7 +32,10 @@ public class BalanceServiceImpl implements BalanceService {
     private final UserRepository userRepository;
 
     @Autowired
-    public BalanceServiceImpl(ExpenseShareRepository expenseShareRepository, ExpenseRepository expenseRepository, GroupRepository groupRepository, UserRepository userRepository) {
+    public BalanceServiceImpl(ExpenseShareRepository expenseShareRepository,
+                              ExpenseRepository expenseRepository,
+                              GroupRepository groupRepository,
+                              UserRepository userRepository) {
         this.expenseShareRepository = expenseShareRepository;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
@@ -40,126 +43,182 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
+    @Transactional
     public Expense addExpenseToGroup(String groupId, List<User> sharedUsers, Long paidByUserId,
                                      String title, BigDecimal amount, LocalDateTime date) {
-        Expense expense = saveExpense(groupId, paidByUserId, title, amount, date); // just saved expense
-        int numberOfSharedUsers = sharedUsers.size();
+        // Валидация
+        if (sharedUsers == null || sharedUsers.isEmpty()) {
+            throw new IllegalArgumentException("Shared users list cannot be empty");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Expense amount must be positive");
+        }
+
+        // Сохранение расхода
+        Expense expense = saveExpense(groupId, paidByUserId, title, amount, date);
+
+        // Расчет и сохранение долей
+        BigDecimal shareAmount = amount.divide(
+                BigDecimal.valueOf(sharedUsers.size()),
+                2,
+                RoundingMode.HALF_EVEN
+        );
+
+        List<ExpenseShare> shares = new ArrayList<>();
         for (User user : sharedUsers) {
             ExpenseShare es = new ExpenseShare();
             es.setExpense(expense);
             es.setUser(user);
-            es.setAmount(amount.divide(BigDecimal.valueOf(numberOfSharedUsers), 2, RoundingMode.DOWN));
-            expenseShareRepository.save(es);
+            es.setAmount(shareAmount);
+            shares.add(es);
         }
+        expenseShareRepository.saveAll(shares);
+
         return expense;
     }
 
     private Expense saveExpense(String groupId, Long paidByUserId,
                                 String title, BigDecimal amount, LocalDateTime date) {
+        Group group = groupRepository.findGroupById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Group not found: " + groupId));
+
+        User paidBy = userRepository.findUserByTelegramId(paidByUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
+
         Expense expense = new Expense();
-        expense.setGroup(groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Expense can't be saved because group " + groupId + " doesn't exist")));
-        expense.setAmount(amount);
+        expense.setGroup(group);
+        expense.setPaidBy(paidBy);
         expense.setTitle(title);
-        expense.setDate(date);
+        expense.setAmount(amount);
+        expense.setDate(date != null ? date : LocalDateTime.now());
         expense.setCreatedAt(LocalDateTime.now());
-        expense.setPaidBy(userRepository.findUserByTelegramId(paidByUserId)
-                .orElseThrow(() -> new UserNotFoundException("Can't set paidBy value for expense, because user " + paidByUserId + " doesn't exist")));
 
         return expenseRepository.save(expense);
     }
 
-    /**
-     * Correctly calculates the balance for all members of a group.
-     *
-     * @param groupId the unique identifier of the group
-     * @return a Map where the key is the group member and the value is their final balance
-     */
     @Override
+    @Transactional(readOnly = true)
     public Map<User, BigDecimal> calculateBalance(String groupId) {
-        // Get all members of the group
+        // Получаем участников группы
         List<User> members = userRepository.findUsersByGroup(groupId);
         if (members.isEmpty()) {
-            throw new UserNotFoundException("Can't find members of the group " + groupId);
+            return Collections.emptyMap();
         }
 
-        // Initialize the balance for all members to zero.
-        // This ensures that every member will be displayed in the final balance,
-        // even if they have not spent or participated in anything.
+        // Инициализация баланса
         Map<User, BigDecimal> balance = new HashMap<>();
         for (User user : members) {
             balance.put(user, BigDecimal.ZERO);
         }
 
-        // Get all expenses related to this group
-        // This is much more efficient than querying inside a loop
-        List<Expense> allExpenses = expenseRepository.findExpensesByGroup(
-                groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't find expenses for the group " + groupId)));
+        // Получаем все расходы группы
+        List<Expense> expenses = expenseRepository.findExpensesByGroupId(groupId);
 
-        // Process each expense
-        for (Expense expense : allExpenses) {
-            // Add the full amount of the expense to the user who paid
+        // Получаем все доли расходов для группы
+        List<Long> expenseIds = expenses.stream().map(Expense::getId).collect(Collectors.toList());
+        List<ExpenseShare> allShares = expenseShareRepository.findByExpenseIdIn(expenseIds);
+
+        // Группируем доли по расходам
+        Map<Long, List<ExpenseShare>> sharesByExpense = allShares.stream()
+                .collect(Collectors.groupingBy(share -> share.getExpense().getId()));
+
+        // Рассчитываем баланс
+        for (Expense expense : expenses) {
+            // Увеличиваем баланс плательщика
             User paidBy = expense.getPaidBy();
-            balance.computeIfPresent(paidBy, (user, currentBalance) -> currentBalance.add(expense.getAmount()));
+            balance.put(paidBy, balance.get(paidBy).add(expense.getAmount()));
 
-            // Get the shares for the current expense
-            List<ExpenseShare> expenseShares = expenseShareRepository.findExpenseSharesByExpense(expense);
-
-            // Subtract the share amount from each participating user
-            for (ExpenseShare share : expenseShares) {
-                User user = share.getUser();
-                balance.computeIfPresent(user, (u, currentBalance) -> currentBalance.subtract(share.getAmount()));
+            // Уменьшаем баланс участников
+            List<ExpenseShare> shares = sharesByExpense.get(expense.getId());
+            if (shares != null) {
+                for (ExpenseShare share : shares) {
+                    User user = share.getUser();
+                    balance.put(user, balance.get(user).subtract(share.getAmount()));
+                }
             }
         }
 
         return balance;
     }
 
-
     @Override
+    @Transactional
     public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
-        Expense expenseToUpdate = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new ExpenseNotFoundException("Expense wasn't found"));
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found: " + expenseId));
 
-        updateDto.paidByUserId().ifPresent(newPaidByUserId -> {
-            User newPayer = userRepository.findUserByTelegramId(newPaidByUserId)
-                    .orElseThrow(() -> new UserNotFoundException(String.format("Can't update expense %s, because newPayer %s doesn't exist", expenseId, newPaidByUserId)));
-            expenseToUpdate.setPaidBy(newPayer);
+        // Обновление плательщика
+        updateDto.paidByUserId().ifPresent(paidByUserId -> {
+            User newPayer = userRepository.findUserByTelegramId(paidByUserId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
+            expense.setPaidBy(newPayer);
         });
 
-        updateDto.title().ifPresent(expenseToUpdate::setTitle);
+        // Обновление заголовка
+        updateDto.title().ifPresent(expense::setTitle);
 
-        updateDto.amount().ifPresent(expenseToUpdate::setAmount);
-
-        updateDto.date().ifPresent(expenseToUpdate::setDate);
-
-        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
-            List<ExpenseShare> oldShares = expenseShareRepository.findExpenseSharesByExpense(expenseToUpdate);
-            expenseShareRepository.deleteAll(oldShares);
-
-            BigDecimal totalAmount = expenseToUpdate.getAmount();
-            int numberOfSharedUsers = newSharedUsers.size();
-
-            if (numberOfSharedUsers > 0) {
-                BigDecimal shareAmount = totalAmount.divide(BigDecimal.valueOf(numberOfSharedUsers), 2, RoundingMode.DOWN);
-
-                for (User user : newSharedUsers) {
-                    ExpenseShare es = new ExpenseShare();
-                    es.setExpense(expenseToUpdate);
-                    es.setUser(user);
-                    es.setAmount(shareAmount);
-                    expenseShareRepository.save(es);
-                }
+        // Обновление суммы
+        updateDto.amount().ifPresent(amount -> {
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Amount must be positive");
             }
+            expense.setAmount(amount);
         });
 
-        return expenseRepository.save(expenseToUpdate);
+        // Обновление даты
+        updateDto.date().ifPresent(expense::setDate);
+
+        // Обновление списка участников
+        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
+            if (newSharedUsers.isEmpty()) {
+                throw new IllegalArgumentException("Shared users cannot be empty");
+            }
+
+            // Удаляем старые доли
+            expenseShareRepository.deleteByExpenseId(expenseId);
+
+            // Рассчитываем новую долю на каждого участника
+            BigDecimal shareAmount = expense.getAmount().divide(
+                    BigDecimal.valueOf(newSharedUsers.size()),
+                    2,
+                    RoundingMode.HALF_EVEN
+            );
+
+            // Создаём новые доли
+            List<ExpenseShare> newShares = new ArrayList<>();
+            for (User user : newSharedUsers) {
+                ExpenseShare share = new ExpenseShare();
+                share.setExpense(expense);
+                share.setUser(user);
+                share.setAmount(shareAmount);
+                newShares.add(share);
+            }
+            expenseShareRepository.saveAll(newShares);
+        });
+
+        return expenseRepository.save(expense);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Expense> getExpensesForGroup(String groupId) {
-        return expenseRepository.getExpensesByGroup(groupRepository.findGroupById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException("Can't find expenses for group " + groupId + ", because it doesn't exist")));
+        return expenseRepository.findExpensesByGroupId(groupId);
+    }
+
+    @Override
+    public String getBalanceText(String groupId) {
+        Map<User, BigDecimal> balance = calculateBalance(groupId);
+
+        if (balance.isEmpty()) {
+            return "No balance data available for this group";
+        }
+
+        StringBuilder sb = new StringBuilder("💰 *Group Balance* 💰\n\n");
+        balance.forEach((user, amount) -> {
+            String emoji = amount.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓";
+            sb.append(String.format("%s %s: %s\n", emoji, user.getName(), amount));
+        });
+
+        return sb.toString();
     }
 }
