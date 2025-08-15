@@ -28,4 +28,6 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
     boolean existsByGroupIdAndUser_TelegramId(String groupId, Long userTelegramId);
 
     int deleteByGroupIdAndUser_TelegramId(String groupId, Long userTelegramId);
+
+    List<GroupMembership> findGroupMembershipByUser_TelegramIdAndGroup_Id(Long userTelegramId, String groupId);
 }
