@@ -1,6 +1,7 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers;
+package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
+import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
@@ -19,7 +20,7 @@ import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 @Component
 @StateHandlerFor(UserState.MEMBERS_MENU)
 @RequiredArgsConstructor
-public class MembersMenuHandler  implements StateHandler{
+public class MembersMenuHandler  implements StateHandler {
 
     private final UserInteractionServiceImpl userInteractionService;
     private final MessageServiceImpl messageService;

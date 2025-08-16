@@ -1,7 +1,7 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers;
+package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
-import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
+import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;

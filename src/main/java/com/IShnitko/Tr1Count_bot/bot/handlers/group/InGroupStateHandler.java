@@ -1,8 +1,8 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers;
+package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
-import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
+import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
@@ -47,7 +47,7 @@ public class InGroupStateHandler implements StateHandler {
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
 
-        switch (command) {
+        switch (command) { // TODO: add Invitation link and expense history
             case BALANCE -> handleBalance(context, groupId);
             case ADD_EXPENSE -> handleAddExpense(context);
             case MEMBERS -> handleMembers(context, groupId);
@@ -70,7 +70,7 @@ public class InGroupStateHandler implements StateHandler {
     private void handleAddExpense(ChatContext context) {
         try {
             // Переводим в состояние добавления расхода
-            userStateManager.setState(context.getChatId(), UserState.ADDING_EXPENSE);
+            userStateManager.setState(context.getChatId(), UserState.ADDING_EXPENSE_START);
 
             // Отправляем инструкцию
             String instructions = """
@@ -82,7 +82,8 @@ public class InGroupStateHandler implements StateHandler {
                 Example:
                 `Dinner 25.50`
                 """;
-            messageService.sendMessage(context.getChatId(), instructions);
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+            messageService.sendMessage(context.getChatId(), instructions, keyboardFactory.returnButton());
         } catch (Exception e) {
             messageService.sendMessage(context.getChatId(), "❌ Error starting expense creation");
         }
@@ -92,7 +93,7 @@ public class InGroupStateHandler implements StateHandler {
         try {
             List<User> members = groupService.getUsersForGroup(groupId);
             messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-            messageService.sendMessage(context.getChatId(), "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members));
+            messageService.sendMessage(context.getChatId(), "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
             userStateManager.setState(context.getChatId(), UserState.MEMBERS_MENU);
         } catch (Exception e) {
             messageService.sendMessage(context.getChatId(), "❌ Error retrieving members");

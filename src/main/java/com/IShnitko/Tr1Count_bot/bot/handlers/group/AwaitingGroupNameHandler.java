@@ -1,6 +1,7 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers;
+package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
+import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component
 @StateHandlerFor(UserState.AWAITING_GROUP_NAME)
 @RequiredArgsConstructor
-public class AwaitingGroupNameHandler implements StateHandler{
+public class AwaitingGroupNameHandler implements StateHandler {
     private static final Logger LOG = LoggerFactory.getLogger(AwaitingGroupNameHandler.class);
 
     private final UserInteractionService userInteractionService;
