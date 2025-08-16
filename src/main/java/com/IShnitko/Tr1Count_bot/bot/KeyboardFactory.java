@@ -117,7 +117,7 @@ public class KeyboardFactory {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
-                .text("Return to main menu")
+                .text("Return")
                 .callbackData(BACK_COMMAND)
                 .build());
         rows.add(row);
