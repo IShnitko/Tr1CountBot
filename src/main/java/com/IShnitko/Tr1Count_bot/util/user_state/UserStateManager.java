@@ -1,5 +1,6 @@
 package com.IShnitko.Tr1Count_bot.util.user_state;
 
+import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserStateManager {
     private final Map<Long, UserState> userStates = new ConcurrentHashMap<>();
     private final Map<Long, String> chosenGroups = new ConcurrentHashMap<>();
+    private final Map<Long, CreateExpenseDto> userExpenseDtos = new ConcurrentHashMap<>();
 
     public void setState(Long chatId, UserState state) {
         userStates.put(chatId, state);
@@ -34,9 +36,18 @@ public class UserStateManager {
     public void clearUserData(Long chatId) {
         clearState(chatId);
         chosenGroups.remove(chatId);
+        userExpenseDtos.remove(chatId);
     }
 
     public void clearChosenGroup(Long chatId) {
         chosenGroups.remove(chatId);
+    }
+
+    public CreateExpenseDto getOrCreateExpenseDto(Long chatId) {
+        return userExpenseDtos.computeIfAbsent(chatId, k -> new CreateExpenseDto());
+    }
+
+    public void clearExpenseDto(Long chatId) {
+        userExpenseDtos.remove(chatId);
     }
 }
