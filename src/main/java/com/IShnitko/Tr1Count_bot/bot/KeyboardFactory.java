@@ -1,5 +1,6 @@
 package com.IShnitko.Tr1Count_bot.bot;
 
+import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
@@ -14,9 +15,13 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
+import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.AwaitingDateHandler.DEFAULT_DATE_COMMAND;
+import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.ConfirmExpenseHandler.CANCEL_EXPENSE_CREATION;
+import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.ConfirmExpenseHandler.CONFIRM_SHARED_USERS;
 
 @Component
 public class KeyboardFactory {
+
     public InlineKeyboardMarkup mainMenu() {
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -164,5 +169,91 @@ public class KeyboardFactory {
         keyboard.add(Collections.singletonList(backButton));
 
         return new InlineKeyboardMarkup(keyboard);
+    }
+    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) { // TODO: if no button is pressed then no cross or checkmark is shown
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+        if (expenseDto.getSharedUsers().isEmpty()) {
+            expenseDto.initializeSharedUsers(members);
+        }
+
+        for (User user : members) {
+            // Determine the current checkmark status from the DTO
+            boolean isShared = expenseDto.getSharedUsers().getOrDefault(user.getTelegramId(), true);
+            String checkmark = isShared ? " ✔️" : " ❌";
+            String buttonText = user.getName() + checkmark;
+
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(buttonText);
+            // The callback data must contain the user's ID for later processing
+            button.setCallbackData("select_shared_user:" + user.getTelegramId());
+
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(button);
+            keyboard.add(row);
+        }
+
+        // Add a final row with "Confirm" and "Cancel" buttons
+        InlineKeyboardButton confirmButton = new InlineKeyboardButton();
+        confirmButton.setText("✅ Confirm");
+        confirmButton.setCallbackData("confirm_shared_users");
+
+        InlineKeyboardButton cancelButton = new InlineKeyboardButton();
+        cancelButton.setText("❌ Cancel");
+        cancelButton.setCallbackData("cancel_expense_creation");
+
+        List<InlineKeyboardButton> finalRow = new ArrayList<>();
+        finalRow.add(confirmButton);
+        finalRow.add(cancelButton);
+        keyboard.add(finalRow);
+
+        markup.setKeyboard(keyboard);
+        return markup;
+    }
+
+    public InlineKeyboardMarkup dateButton() {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Today")
+                .callbackData(DEFAULT_DATE_COMMAND)
+                .build());
+        rows.add(row);
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Return")
+                .callbackData(BACK_COMMAND)
+                .build());
+        rows.add(row);
+        inlineKeyboard.setKeyboard(rows);
+        return inlineKeyboard;
+    }
+
+    public InlineKeyboardMarkup finalConfirmationKeyboard() {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+        InlineKeyboardButton confirmButton = new InlineKeyboardButton();
+        confirmButton.setText("✅ Confirm");
+        confirmButton.setCallbackData(CONFIRM_SHARED_USERS);
+
+        InlineKeyboardButton cancelButton = new InlineKeyboardButton();
+        cancelButton.setText("❌ Cancel");
+        cancelButton.setCallbackData(CANCEL_EXPENSE_CREATION);
+
+        InlineKeyboardButton returnButton = new InlineKeyboardButton();
+        cancelButton.setText("❌ Return");
+        cancelButton.setCallbackData(BACK_COMMAND);
+
+        List<InlineKeyboardButton> finalRow = new ArrayList<>();
+        finalRow.add(confirmButton);
+        finalRow.add(cancelButton);
+        finalRow.add(returnButton);
+        keyboard.add(finalRow);
+
+        markup.setKeyboard(keyboard);
+        return markup;
     }
 }
