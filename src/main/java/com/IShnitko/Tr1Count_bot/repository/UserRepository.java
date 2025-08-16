@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -16,16 +17,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByTelegramId(Long telegramId);
 
     @Query("SELECT u " +
-            "FROM User u " +
-            "JOIN Group g on g.createdBy = u " +
-            "WHERE g.id = :groupId")
-    Optional<User> findCreatorOfGroup(String groupId);
-
-    @Query("SELECT u " +
             "from User u " +
             "join GroupMembership gm on gm.user = u " +
             "where gm.group.id = :groupId")
     List<User> findUsersByGroup(String groupId);
 
-    boolean existsByTelegramId(Long userId);
+    List<User> findAllByTelegramIdIn(Set<Long> longs);
 }
