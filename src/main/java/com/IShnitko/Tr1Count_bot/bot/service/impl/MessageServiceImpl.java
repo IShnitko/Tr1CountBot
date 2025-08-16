@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -27,7 +28,7 @@ public class MessageServiceImpl implements MessageService {
         this.bot = bot;
     }
 
-    // The methods now use the bot instance to execute API calls
+    @Override
     public void sendMessage(Long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
@@ -41,6 +42,7 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    @Override
     public void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) { // TODO: implement markdown
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
@@ -55,6 +57,7 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    @Override
     public void answerCallbackQuery(String callbackQueryId) {
         AnswerCallbackQuery answer = AnswerCallbackQuery.builder()
                 .callbackQueryId(callbackQueryId)
@@ -75,6 +78,15 @@ public class MessageServiceImpl implements MessageService {
                     .build());
         } catch (TelegramApiException e) {
             LOG.error("Error deleting message", e);
+        }
+    }
+
+    @Override
+    public void editMessage(EditMessageReplyMarkup editMessage) {
+        try {
+            bot.execute(editMessage);
+        } catch (TelegramApiException e) {
+            LOG.error("Error editing message reply markup", e);
         }
     }
 }
