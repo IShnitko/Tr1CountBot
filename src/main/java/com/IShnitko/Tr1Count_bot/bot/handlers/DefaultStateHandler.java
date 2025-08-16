@@ -10,7 +10,6 @@ import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserAlreadyInGroupException;
-import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +48,7 @@ public class DefaultStateHandler implements StateHandler {
             case HELP -> userInteractionService.helpCommand(context.getChatId());
             case JOIN -> handleJoin(context, input);
             case BACK_COMMAND -> userInteractionService.handleBackCommand(context.getChatId());
-            case CREATE -> handleCreate(context, input);
+            case CREATE -> handleCreate(context);
             case GROUPS -> chooseGroup(context);
             default -> userInteractionService.unknownCommand(context.getChatId());
         }
@@ -91,6 +90,7 @@ public class DefaultStateHandler implements StateHandler {
         try {
             groupService.joinGroupById(groupCode, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, groupCode);
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
             messageService.sendMessage(context.getChatId(), "You joined group: " + groupCode);
             groupManagementService.displayGroup(context.getChatId(), groupCode);
         } catch (GroupNotFoundException e) {
@@ -100,7 +100,8 @@ public class DefaultStateHandler implements StateHandler {
         }
     }
 
-    private void handleCreate(ChatContext context, String input) {
+    private void handleCreate(ChatContext context) {
+        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         messageService.sendMessage(context.getChatId(), "Enter group name:", keyboardFactory.returnButton());
         userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_NAME);
     }
@@ -111,6 +112,7 @@ public class DefaultStateHandler implements StateHandler {
             messageService.sendMessage(context.getChatId(), "You're not in any groups yet!");
         } else {
             InlineKeyboardMarkup keyboard = keyboardFactory.groupsListMenu(groups);
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
             messageService.sendMessage(context.getChatId(), "Choose a group:", keyboard);
             userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_ID); // TODO: answer callback
         }

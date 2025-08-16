@@ -43,6 +43,7 @@ public class MembersMenuHandler  implements StateHandler{
         switch (command) {
             case INFO -> getMemberInfo(context, groupCode, input);
             case DELETE -> deleteMember(context, groupCode, input);
+            case BACK_COMMAND -> returnToGroup(context, groupCode);
         }
     }
 
@@ -65,5 +66,11 @@ public class MembersMenuHandler  implements StateHandler{
         messageService.sendMessage(context.getChatId(),
                 userService.getUserInfoForGroup(userId, groupCode));
         userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
+    }
+
+    private void returnToGroup(ChatContext context, String groupCode) {
+        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+        userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
+        groupManagementService.displayGroup(context.getChatId(), groupCode);
     }
 }

@@ -25,7 +25,6 @@ public class AwaitingGroupIdHandler implements StateHandler {
         if (context.getCallbackQueryId() != null) {
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
-
         // Get selected group ID from callback data
         String groupId = context.getCallbackData();
         Long userId = context.getUser().getId();
@@ -43,7 +42,7 @@ public class AwaitingGroupIdHandler implements StateHandler {
 
     private void handleValidSelection(ChatContext context, String groupId) throws TelegramApiException {
         userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, groupId);
-
+        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         groupManagementService.displayGroup(context.getChatId(), groupId); // TODO: delete message after exec
     }
 }

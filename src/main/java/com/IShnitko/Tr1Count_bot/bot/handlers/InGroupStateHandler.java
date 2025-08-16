@@ -91,7 +91,7 @@ public class InGroupStateHandler implements StateHandler {
     private void handleMembers(ChatContext context, String groupId) {
         try {
             List<User> members = groupService.getUsersForGroup(groupId);
-
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
             messageService.sendMessage(context.getChatId(), "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members));
             userStateManager.setState(context.getChatId(), UserState.MEMBERS_MENU);
         } catch (Exception e) {
@@ -110,7 +110,7 @@ public class InGroupStateHandler implements StateHandler {
 
         // Сбрасываем выбранную группу
         userStateManager.clearChosenGroup(context.getChatId());
-
+        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         // Показываем главное меню
         userInteractionService.startCommand(context.getChatId());
     }

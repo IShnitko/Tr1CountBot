@@ -33,7 +33,7 @@ public class UserInteractionServiceImpl implements UserInteractionService {
     }
 
     @Override
-    public void handleBackCommand(Long chatId) {// TODO: move business logic here
+    public void handleBackCommand(Long chatId) {
         userStateManager.setState(chatId, UserState.DEFAULT);
         messageService.sendMessage(chatId, "You came back to main menu");
         startCommand(chatId);
