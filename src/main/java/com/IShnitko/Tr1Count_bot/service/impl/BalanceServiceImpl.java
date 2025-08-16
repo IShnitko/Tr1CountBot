@@ -1,5 +1,6 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
+import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.dto.UpdateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.ExpenseShare;
@@ -14,6 +15,7 @@ import com.IShnitko.Tr1Count_bot.util.exception.ExpenseNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,34 +33,57 @@ public class BalanceServiceImpl implements BalanceService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
 
+    // Self-injection to ensure @Transactional works on self-invocations
+    private final BalanceService self;
+
     @Autowired
     public BalanceServiceImpl(ExpenseShareRepository expenseShareRepository,
                               ExpenseRepository expenseRepository,
                               GroupRepository groupRepository,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              @Lazy BalanceService self) {
         this.expenseShareRepository = expenseShareRepository;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
+        this.self = self;
     }
 
-    @Override
+    /**
+     * Creates and saves a new expense to a group based on the data in a CreateExpenseDto.
+     * This method is a more streamlined replacement for addExpenseToGroup.
+     *
+     * @param groupId The ID of the group where the expense will be added.
+     * @param dto The DTO containing all the expense details.
+     * @return The newly created Expense entity.
+     */
     @Transactional
-    public Expense addExpenseToGroup(String groupId, List<User> sharedUsers, Long paidByUserId,
-                                     String title, BigDecimal amount, LocalDateTime date) {
-        // Валидация
-        if (sharedUsers == null || sharedUsers.isEmpty()) {
+    public Expense createExpense(String groupId, CreateExpenseDto dto) {
+        // Validation checks
+        if (dto.getSharedUsers() == null || dto.getSharedUsers().isEmpty()) {
             throw new IllegalArgumentException("Shared users list cannot be empty");
         }
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Expense amount must be positive");
         }
 
-        // Сохранение расхода
-        Expense expense = saveExpense(groupId, paidByUserId, title, amount, date);
+        // Fetch users from the database based on the DTO's IDs
+        List<User> sharedUsers = userRepository.findAllByTelegramIdIn(dto.getSharedUsers().keySet());
+        if (sharedUsers.size() != dto.getSharedUsers().size()) {
+            throw new IllegalArgumentException("One or more shared users not found in the database.");
+        }
 
-        // Расчет и сохранение долей
-        BigDecimal shareAmount = amount.divide(
+        // Save the main expense
+        Expense expense = saveExpense(
+                groupId,
+                dto.getPaidByUserId(),
+                dto.getTitle(),
+                dto.getAmount(),
+                dto.getDate()
+        );
+
+        // Calculate and save shares
+        BigDecimal shareAmount = dto.getAmount().divide(
                 BigDecimal.valueOf(sharedUsers.size()),
                 2,
                 RoundingMode.HALF_EVEN
@@ -207,7 +232,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public String getBalanceText(String groupId) {
-        Map<User, BigDecimal> balance = calculateBalance(groupId);
+        Map<User, BigDecimal> balance = self.calculateBalance(groupId);
 
         if (balance.isEmpty()) {
             return "No balance data available for this group";
