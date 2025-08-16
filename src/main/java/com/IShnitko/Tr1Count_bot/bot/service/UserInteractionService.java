@@ -4,5 +4,5 @@ public interface UserInteractionService {
     void startCommand(Long chatId);
     void helpCommand(Long chatId);
     void handleBackCommand(Long chatId);
-    void unknownCommand(Long chatId);
+    void unknownCommand(Long chatId); // TODO: maybe move to messageService
 }
