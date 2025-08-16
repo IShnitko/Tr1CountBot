@@ -130,7 +130,7 @@ public class KeyboardFactory {
         return inlineKeyboard;
     }
 
-    public InlineKeyboardMarkup membersMenu(List<User> members) {
+    public InlineKeyboardMarkup membersMenu(List<User> members, Boolean withDeleteButton) {
         if (members == null || members.isEmpty()) {
             // Если нет участников, вернуть пустую или другую клавиатуру
             return returnButton();
@@ -157,9 +157,10 @@ public class KeyboardFactory {
             InlineKeyboardButton deleteButton = new InlineKeyboardButton("❌");
             deleteButton.setCallbackData(DELETE + "_" + member.getTelegramId());
 
+
             List<InlineKeyboardButton> row = new ArrayList<>();
             row.add(nameButton);
-            row.add(deleteButton);
+            if (withDeleteButton) row.add(deleteButton);
 
             keyboard.add(row);
         }
