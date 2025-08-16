@@ -54,8 +54,10 @@ public class Tr1CountBot extends TelegramLongPollingBot {
             userService.findOrCreateUser(context.getUser());
             UserState state = userStateManager.getState(context.getChatId());
 
+            String text = context.getText() != null ? context.getText() : context.getCallbackData();
+
             LOG.info("Processing {} ({}) from {} in state: {}",
-                    context.getUpdateType(), context.getText(), context.getChatId(), state);
+                    context.getUpdateType(), text, context.getChatId(), state);
 
             stateHandlerFactory.getHandler(state).handle(context);
         } catch (Exception e) {
