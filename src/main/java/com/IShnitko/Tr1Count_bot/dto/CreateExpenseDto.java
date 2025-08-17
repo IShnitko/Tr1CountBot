@@ -1,6 +1,7 @@
 package com.IShnitko.Tr1Count_bot.dto;
 
 import com.IShnitko.Tr1Count_bot.model.User;
+import com.IShnitko.Tr1Count_bot.service.UserService;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,6 +22,7 @@ public class CreateExpenseDto {
     private Long paidByUserId;
     private Map<Long, Boolean> sharedUsers = new HashMap<>();
     private LocalDateTime date;
+    private Integer messageId; // TODO: use this more and change deleting messages to editing
 
     public void initializeSharedUsers(List<User> users) {
         if (users != null) {
