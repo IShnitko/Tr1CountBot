@@ -233,28 +233,31 @@ public class KeyboardFactory {
     }
 
     public InlineKeyboardMarkup finalConfirmationKeyboard() {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
 
-        InlineKeyboardButton confirmButton = new InlineKeyboardButton();
-        confirmButton.setText("✅ Confirm");
-        confirmButton.setCallbackData(CONFIRM_SHARED_USERS);
+        row.add(InlineKeyboardButton.builder()
+                .text("✅ Confirm")
+                .callbackData(CONFIRM_SHARED_USERS)
+                .build());
+        rows.add(row);
+        row = new ArrayList<>();
 
-        InlineKeyboardButton cancelButton = new InlineKeyboardButton();
-        cancelButton.setText("❌ Cancel");
-        cancelButton.setCallbackData(CANCEL_EXPENSE_CREATION);
+        row.add(InlineKeyboardButton.builder()
+                .text("❌ Cancel")
+                .callbackData(CANCEL_EXPENSE_CREATION)
+                .build());
+        rows.add(row);
+        row = new ArrayList<>();
 
-        InlineKeyboardButton returnButton = new InlineKeyboardButton();
-        cancelButton.setText("❌ Return");
-        cancelButton.setCallbackData(BACK_COMMAND);
+        row.add(InlineKeyboardButton.builder()
+                .text("Return")
+                .callbackData(BACK_COMMAND)
+                .build());
+        rows.add(row);
 
-        List<InlineKeyboardButton> finalRow = new ArrayList<>();
-        finalRow.add(confirmButton);
-        finalRow.add(cancelButton);
-        finalRow.add(returnButton);
-        keyboard.add(finalRow);
-
-        markup.setKeyboard(keyboard);
-        return markup;
+        inlineKeyboard.setKeyboard(rows);
+        return inlineKeyboard;
     }
 }
