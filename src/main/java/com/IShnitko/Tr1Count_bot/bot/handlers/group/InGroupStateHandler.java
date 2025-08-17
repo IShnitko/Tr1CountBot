@@ -7,6 +7,7 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
+import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
@@ -68,10 +69,13 @@ public class InGroupStateHandler implements StateHandler {
     }
 
     private void handleAddExpense(ChatContext context) {
+        Integer messageId = context.getMessage().getMessageId();
+        Long chatId = context.getChatId();
+
         try {
             // Переводим в состояние добавления расхода
-            userStateManager.setState(context.getChatId(), UserState.ADDING_EXPENSE_START);
-
+            userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
+            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
             // Отправляем инструкцию
             String instructions = """
                 💸 *Add New Expense*
@@ -82,21 +86,25 @@ public class InGroupStateHandler implements StateHandler {
                 Example:
                 `Dinner 25.50`
                 """;
-            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-            messageService.sendMessage(context.getChatId(), instructions, keyboardFactory.returnButton());
+            messageService.deleteMessage(chatId, messageId);
+            Integer sentMessageId = messageService.sendMessage(chatId, instructions, keyboardFactory.returnButton());
+            expenseDto.setMessageId(sentMessageId);
         } catch (Exception e) {
-            messageService.sendMessage(context.getChatId(), "❌ Error starting expense creation");
+            messageService.deleteMessage(chatId, messageId);
+            messageService.sendMessage(chatId, "❌ Error starting expense creation");
         }
     }
 
     private void handleMembers(ChatContext context, String groupId) {
+        Long chatId = context.getChatId();
         try {
             List<User> members = groupService.getUsersForGroup(groupId);
-            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-            messageService.sendMessage(context.getChatId(), "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
-            userStateManager.setState(context.getChatId(), UserState.MEMBERS_MENU);
+            Integer messageId = context.getMessage().getMessageId();
+            messageService.deleteMessage(chatId, messageId);
+            messageService.sendMessage(chatId, "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
+            userStateManager.setState(chatId, UserState.MEMBERS_MENU);
         } catch (Exception e) {
-            messageService.sendMessage(context.getChatId(), "❌ Error retrieving members");
+            messageService.sendMessage(chatId, "❌ Error retrieving members");
         }
     }
 
