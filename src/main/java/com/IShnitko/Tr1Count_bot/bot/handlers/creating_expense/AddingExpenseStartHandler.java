@@ -43,6 +43,7 @@ public class AddingExpenseStartHandler implements StateHandler {
     public void handle(ChatContext context) throws TelegramApiException {
         String input = context.getText() != null ? context.getText() : context.getCallbackData();
         Long chatId = context.getChatId();
+        Integer messageId = context.getMessage().getMessageId();
 
         if (input == null) {
             userInteractionService.unknownCommand(chatId);
@@ -52,7 +53,9 @@ public class AddingExpenseStartHandler implements StateHandler {
         if(input.equals(BACK_COMMAND)) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);
+            messageService.deleteMessage(chatId, messageId);
             groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId));
+            return;
         }
 
         Matcher matcher = EXPENSE_PATTERN.matcher(input);
@@ -69,11 +72,26 @@ public class AddingExpenseStartHandler implements StateHandler {
             expenseDto.setAmount(amount);
 
             userStateManager.setState(chatId, UserState.AWAITING_DATE);
-
+            if (expenseDto.getMessageId() != null) {
+                messageService.deleteMessage(chatId, expenseDto.getMessageId());
+            }
             messageService.sendMessage(chatId, "Input date", keyboardFactory.dateButton());
         } else {
-            // TODO: message is not deleted after incorrect input
-            messageService.sendMessage(chatId, "❌ Invalid format. Please send in format: `<description> <amount>`.", keyboardFactory.returnButton());
+            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
+
+            // Here we edit the original message instead of deleting and sending a new one
+            // This prevents a "flash" and keeps the flow smoother.
+            if (expenseDto.getMessageId() != null) {
+                messageService.editMessage(
+                        chatId,
+                        expenseDto.getMessageId(),
+                        "❌ Invalid format. Please send in format: `<description> <amount>`.",
+                        keyboardFactory.returnButton()
+                );
+            } else {
+                // As a fallback, send a new message
+                messageService.sendMessage(chatId, "❌ Invalid format. Please send in format: `<description> <amount>`.", keyboardFactory.returnButton());
+            }
         }
     }
 }
