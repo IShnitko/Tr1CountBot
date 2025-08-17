@@ -49,7 +49,7 @@ public class InGroupStateHandler implements StateHandler {
 
         switch (command) { // TODO: add Invitation link and expense history
             case BALANCE -> handleBalance(context, groupId);
-            case ADD_EXPENSE -> handleAddExpense(context);
+            case ADD_EXPENSE -> handleAddExpense(context); // TODO: maybe change taking context to just taking params
             case MEMBERS -> handleMembers(context, groupId);
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
