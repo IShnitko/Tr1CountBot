@@ -4,16 +4,18 @@ import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.service.impl.UserServiceImpl;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -29,13 +31,14 @@ import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
 @StateHandlerFor(UserState.AWAITING_SHARED_USERS)
 @RequiredArgsConstructor
 public class AwaitingSharedUsersHandler implements StateHandler {
-
+    private static final Logger LOG = LoggerFactory.getLogger(AwaitingSharedUsersHandler.class);
     private final UserStateManager userStateManager;
     private final MessageService messageService;
     private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
     private final UserInteractionService userInteractionService;
     private final UserService userService;
+    private final GroupManagementService groupManagementService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -59,7 +62,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
         }
     }
 
-    private void handleUserSelection(ChatContext context, String callbackData) throws TelegramApiException {
+    private void handleUserSelection(ChatContext context, String callbackData) {
         Long chatId = context.getChatId();
         Long userId = Long.parseLong(callbackData.split(":")[1]);
 
@@ -83,7 +86,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
         messageService.editMessage(editMessage);
     }
 
-    private void handleConfirm(ChatContext context) throws TelegramApiException {
+    private void handleConfirm(ChatContext context) {
         Long chatId = context.getChatId();
 
         // Retrieve the DTO from the user's session
@@ -91,11 +94,13 @@ public class AwaitingSharedUsersHandler implements StateHandler {
 
         // Build the final summary message
         String summary = buildSummaryMessage(expenseDto);
-
+        LOG.info("Summary string is empty: " + summary.isEmpty());
         // Set the state to CONFIRMING_EXPENSE and send the final message with buttons
         userStateManager.setState(chatId, UserState.CONFIRMING_EXPENSE);
-
-        messageService.sendMessage(chatId, summary, keyboardFactory.finalConfirmationKeyboard());
+        messageService.deleteMessage(chatId, context.getMessage().getMessageId());
+        messageService.sendMessage(chatId,
+                summary,
+                keyboardFactory.finalConfirmationKeyboard());
     }
 
 
