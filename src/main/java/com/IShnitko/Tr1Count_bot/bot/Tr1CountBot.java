@@ -27,8 +27,8 @@ public class Tr1CountBot extends TelegramLongPollingBot {
     public static final String MEMBERS = "/members";
     public static final String BACK_COMMAND = "/back";
     public static final String DELETE = "/delete";
-    public static final String KICK = "/kick";
-    public static final String ADD = "/add";
+    public static final String HISTORY = "/history";
+    public static final String LINK = "/link";
     public static final String INFO = "/info";
 
     private final UserService userService;
