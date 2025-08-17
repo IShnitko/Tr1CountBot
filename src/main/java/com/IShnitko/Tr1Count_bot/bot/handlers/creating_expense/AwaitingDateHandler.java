@@ -12,7 +12,6 @@ import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +34,7 @@ public class AwaitingDateHandler implements StateHandler {
 
     @Override
     public void handle(ChatContext context) throws Exception {
-        String input = context.getText(); // TODO: this handler can also get query not text input (like button today doesn;t work)
+        String input = context.getText() != null ? context.getText() : context.getCallbackData(); // TODO: this handler can also get query not text input (like button today doesn;t work)
         Long chatId = context.getChatId();
 
         messageService.deleteMessage(chatId, context.getMessage().getMessageId());

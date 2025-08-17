@@ -1,6 +1,7 @@
 package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
+import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
@@ -13,6 +14,8 @@ import com.IShnitko.Tr1Count_bot.service.impl.GroupServiceImpl;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -27,11 +30,11 @@ import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
 @StateHandlerFor(UserState.ADDING_EXPENSE_START)
 @RequiredArgsConstructor
 public class AddingExpenseStartHandler implements StateHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(AddingExpenseStartHandler.class);
 
     private static final Pattern EXPENSE_PATTERN = Pattern.compile("^(.+)\\s+([0-9]+\\.?[0-9]*)$");
     private final UserInteractionServiceImpl userInteractionService;
     private final UserStateManager userStateManager;
-    private final GroupServiceImpl groupService;
     private final KeyboardFactory keyboardFactory;
     private final MessageServiceImpl messageService;
     private final GroupManagementService groupManagementService;
@@ -54,7 +57,8 @@ public class AddingExpenseStartHandler implements StateHandler {
 
         Matcher matcher = EXPENSE_PATTERN.matcher(input);
 
-        messageService.deleteMessage(chatId, context.getMessage().getMessageId());
+        messageService.deleteMessage(chatId, messageId);
+        LOG.info("Matcher: " +matcher.matches());
         if (matcher.matches()) {
             String title = matcher.group(1).trim();
             BigDecimal amount = new BigDecimal(matcher.group(2));
