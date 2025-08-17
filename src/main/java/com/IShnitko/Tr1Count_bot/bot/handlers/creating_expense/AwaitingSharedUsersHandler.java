@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
+
 @Component
 @StateHandlerFor(UserState.AWAITING_SHARED_USERS)
 @RequiredArgsConstructor
@@ -52,8 +54,8 @@ public class AwaitingSharedUsersHandler implements StateHandler {
             handleUserSelection(context, callbackData);
         } else if (callbackData.equals("confirm_shared_users")) {
             handleConfirm(context);
-        } else if (callbackData.equals("cancel_expense_creation")) { // TODO: after pressing button it still shows as chosen
-            handleCancel(context);
+        } else if (callbackData.equals(BACK_COMMAND)) { // TODO: after pressing button it still shows as chosen
+            handleReturn(context);
         }
     }
 
@@ -97,11 +99,14 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     }
 
 
-    private void handleCancel(ChatContext context) {
-        // Clear the state and DTO
-        userStateManager.clearUserData(context.getChatId());
-        messageService.sendMessage(context.getChatId(), "❌ Expense creation canceled.");
-        userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
+    private void handleReturn(ChatContext context) {
+        Long chatId = context.getChatId();
+        userStateManager.clearUserData(chatId);
+        userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
+        messageService.sendMessage(chatId, "Choose who paid for this purchase:", keyboardFactory.membersMenu( // TODO: add deleting or editing message
+                groupService.getUsersForGroup(
+                        userStateManager.getChosenGroup(chatId)
+                ), false)); // TODO: i think i should extract every method that is duplicated to service
     }
 
     private String buildSummaryMessage(CreateExpenseDto expenseDto) {
