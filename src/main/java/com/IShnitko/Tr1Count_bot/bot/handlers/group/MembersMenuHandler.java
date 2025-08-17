@@ -51,7 +51,7 @@ public class MembersMenuHandler  implements StateHandler {
     private void deleteMember(ChatContext context, String groupCode, String input) {
         Long userId = Long.valueOf(input.split("_")[1]);
         try {
-            groupService.deleteUserFromGroup(groupCode, userId);
+            groupService.deleteUserFromGroup(groupCode, userId); // TODO: only creator of the group can delete members
             messageService.sendMessage(context.getChatId(), "Successfully deleted group member");
             userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
             groupManagementService.displayGroup(context.getChatId(), groupCode);
