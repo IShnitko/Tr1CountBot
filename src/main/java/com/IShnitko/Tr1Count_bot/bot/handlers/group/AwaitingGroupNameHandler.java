@@ -16,12 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
+import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
+
 @Component
 @StateHandlerFor(UserState.AWAITING_GROUP_NAME)
 @RequiredArgsConstructor
 public class AwaitingGroupNameHandler implements StateHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(AwaitingGroupNameHandler.class);
-
     private final UserInteractionService userInteractionService;
     private final MessageService messageService;
     private final GroupService groupService;
@@ -30,19 +32,21 @@ public class AwaitingGroupNameHandler implements StateHandler {
 
     @Override
     public void handle(ChatContext context) throws Exception {
-        String input = context.getText();
-        if (input == null) {
-            userInteractionService.unknownCommand(context.getChatId());
+        String input = context.getText() != null ? context.getText() : context.getCallbackData();
 
-            return;
-        }
-        if (context.getCallbackQueryId() != null) { // SAFETY CHECK
+        if (Objects.equals(input, BACK_COMMAND)) {
             messageService.answerCallbackQuery(context.getCallbackQueryId());
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+            userStateManager.setState(context.getChatId(), UserState.DEFAULT);
+            userInteractionService.startCommand(context.getChatId());
+        } else if (context.getText() != null) {
+            handleInputGroupName(context.getChatId(), context.getUser().getId(), input, context.getMessage().getMessageId());
+        } else {
+            userInteractionService.unknownCommand(context.getChatId());
         }
-        handleInputGroupName(context.getChatId(), context.getUser().getId(), input, context.getMessage().getMessageId());
     }
 
-    private void handleInputGroupName(Long chatId, Long userId, String groupName, Integer messageId) {
+    private void handleInputGroupName(Long chatId, Long userId, String groupName, Integer messageId) { // TODO: maybe change signature to just take context
         messageService.deleteMessage(chatId, messageId);
         try {
             Group group = groupService.createGroup(groupName, userId);
