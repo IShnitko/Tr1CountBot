@@ -201,8 +201,8 @@ public class KeyboardFactory {
         confirmButton.setCallbackData("confirm_shared_users");
 
         InlineKeyboardButton cancelButton = new InlineKeyboardButton();
-        cancelButton.setText("❌ Cancel");
-        cancelButton.setCallbackData("cancel_expense_creation");
+        cancelButton.setText("Return");
+        cancelButton.setCallbackData(BACK_COMMAND);
 
         List<InlineKeyboardButton> finalRow = new ArrayList<>();
         finalRow.add(confirmButton);
