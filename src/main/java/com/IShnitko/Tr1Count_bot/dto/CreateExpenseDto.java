@@ -29,4 +29,35 @@ public class CreateExpenseDto {
             users.forEach(user -> sharedUsers.put(user.getTelegramId(), true));
         }
     }
+    public String toString(UserService userService) { // TODO; use method in confirmation state
+        StringBuilder builder = new StringBuilder();
+        builder.append("💸 *New Expense*:\n\n");
+        builder.append("💵 *Title*: ").append(title).append("\n");
+        builder.append("💰 *Amount*: ").append(amount).append("\n");
+
+        String paidByUserName = userService.getUserNameById(paidByUserId);
+        builder.append("👤 *Paid by*: ").append(paidByUserName).append("\n\n");
+
+        builder.append("👥 *Shared with*:\n");
+        List<String> sharedUserNames = sharedUsers.entrySet().stream()
+                .filter(Map.Entry::getValue)
+                .map(entry -> userService.getUserNameById(entry.getKey()))
+                .collect(Collectors.toList());
+
+        if (sharedUserNames.isEmpty()) {
+            builder.append("- No one\n");
+        } else {
+            builder.append(String.join(", ", sharedUserNames)).append("\n");
+        }
+
+        builder.append("\n🗓️ *Date*: ");
+        if (date != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            builder.append(date.format(formatter));
+        } else {
+            builder.append("Not specified");
+        }
+
+        return builder.toString();
+    }
 }
