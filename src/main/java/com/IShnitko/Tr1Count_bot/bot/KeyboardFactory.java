@@ -74,6 +74,10 @@ public class KeyboardFactory {
                 .text("Add expense")
                 .callbackData(ADD_EXPENSE)
                 .build());
+        row.add(InlineKeyboardButton.builder()
+                .text("View expense history")
+                .callbackData(HISTORY)
+                .build());
         rows.add(row);
 
         row = new ArrayList<>();
@@ -87,6 +91,10 @@ public class KeyboardFactory {
         row.add(InlineKeyboardButton.builder()
                 .text("Help")
                 .callbackData(HELP)
+                .build());
+        row.add(InlineKeyboardButton.builder()
+                .text("Invite friends")
+                .callbackData(LINK)
                 .build());
         rows.add(row);
 
