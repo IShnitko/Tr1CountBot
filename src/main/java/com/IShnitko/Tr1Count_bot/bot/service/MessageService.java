@@ -9,4 +9,5 @@ public interface MessageService {
     void answerCallbackQuery(String callbackQueryId);
     void deleteMessage(Long chatId, Integer messageId);
     void editMessage(EditMessageReplyMarkup editMessage);
+    void editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboardMarkup);
 }

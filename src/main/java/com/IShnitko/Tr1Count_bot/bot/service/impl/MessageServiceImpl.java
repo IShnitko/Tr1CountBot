@@ -7,10 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -93,4 +94,20 @@ public class MessageServiceImpl implements MessageService {
             LOG.error("Error editing message reply markup", e);
         }
     }
+
+    @Override
+    public void editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboard) {
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(String.valueOf(chatId));
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+//        editMessageText.setParseMode("MarkdownV2");
+        editMessageText.setReplyMarkup(keyboard);
+        try {
+            bot.execute(editMessageText);
+        } catch (TelegramApiException e) {
+            LOG.error("Error editing message reply markup", e);
+        }
+    }
+
 }
