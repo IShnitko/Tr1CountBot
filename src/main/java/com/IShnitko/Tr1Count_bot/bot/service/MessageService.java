@@ -4,8 +4,8 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageRe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 public interface MessageService {
-    void sendMessage(Long chatId, String text);
-    void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard);
+    Integer sendMessage(Long chatId, String text);
+    Integer sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard);
     void answerCallbackQuery(String callbackQueryId);
     void deleteMessage(Long chatId, Integer messageId);
     void editMessage(EditMessageReplyMarkup editMessage);

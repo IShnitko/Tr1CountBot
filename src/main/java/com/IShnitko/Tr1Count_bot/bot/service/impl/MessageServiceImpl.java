@@ -29,21 +29,23 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void sendMessage(Long chatId, String text) {
+    public Integer sendMessage(Long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
 //                .parseMode(ParseMode.MARKDOWNV2)
                 .text(text)
                 .build();
         try {
-            bot.execute(message); // Use the injected bot instance
+            Message sentMessage= bot.execute(message); // Use the injected bot instance
+            return sentMessage.getMessageId();
         } catch (TelegramApiException e) {
             // TODO: Log the error
+            return null;
         }
     }
 
     @Override
-    public void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) { // TODO: implement markdown
+    public Integer sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) { // TODO: implement markdown
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(text)
@@ -51,9 +53,11 @@ public class MessageServiceImpl implements MessageService {
 //                .parseMode(ParseMode.MARKDOWNV2)
                 .build();
         try {
-            bot.execute(message); // Use the injected bot instance
+            Message sentMessage= bot.execute(message); // Use the injected bot instance
+            return sentMessage.getMessageId();
         } catch (TelegramApiException e) {
             // TODO: Log the error
+            return null;
         }
     }
 
