@@ -58,8 +58,25 @@ public class InGroupStateHandler implements StateHandler {
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
             case HISTORY -> showHistory(context, groupId);
+            case LINK -> sendJoinLink(context, groupId);
             default -> userInteractionService.unknownCommand(context.getChatId());
         }
+    }
+
+    private void sendJoinLink(ChatContext context, String groupId) throws TelegramApiException {
+        // Construct the deep link URL.
+        // The bot's username is retrieved from the bot's configuration,
+        // and the start parameter is the groupId.
+        String joinLink = String.format("https://t.me/Tr1Count_bot?start=invite_%s", groupId);
+
+        // Build the message to send to the user.
+        // Use MarkdownV2 for formatting.
+        StringBuilder message = new StringBuilder();
+        message.append("🔗 *Here is the link to share with your friends to join the group\\:* \n\n");
+//        message.append(TelegramApiUtils.formatString(joinLink)); // TODO: implement markdownv2
+        message.append(joinLink);
+
+        messageService.sendMessage(context.getChatId(), message.toString());
     }
 
     private void showHistory(ChatContext context, String groupId) {
