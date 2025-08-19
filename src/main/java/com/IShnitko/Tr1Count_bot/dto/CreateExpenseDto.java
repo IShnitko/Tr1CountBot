@@ -29,7 +29,7 @@ public class CreateExpenseDto {
             users.forEach(user -> sharedUsers.put(user.getTelegramId(), true));
         }
     }
-    public String toString(UserService userService) { // TODO; use method in confirmation state
+    public String toString(UserService userService) {
         StringBuilder builder = new StringBuilder();
         builder.append("💸 *New Expense*:\n\n");
         builder.append("💵 *Title*: ").append(title).append("\n");
