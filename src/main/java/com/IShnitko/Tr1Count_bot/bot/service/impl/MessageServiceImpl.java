@@ -87,16 +87,18 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void editMessage(EditMessageReplyMarkup editMessage) {
+    public Integer editMessage(EditMessageReplyMarkup editMessage) {
         try {
-            bot.execute(editMessage);
+            Message message = (Message) bot.execute(editMessage);
+            return message.getMessageId();
         } catch (TelegramApiException e) {
             LOG.error("Error editing message reply markup", e);
+            return null;
         }
     }
 
     @Override
-    public void editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboard) {
+    public Integer editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboard) {
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(String.valueOf(chatId));
         editMessageText.setMessageId(messageId);
@@ -104,10 +106,27 @@ public class MessageServiceImpl implements MessageService {
 //        editMessageText.setParseMode("MarkdownV2");
         editMessageText.setReplyMarkup(keyboard);
         try {
-            bot.execute(editMessageText);
+            Message message = (Message) bot.execute(editMessageText);
+            return message.getMessageId();
         } catch (TelegramApiException e) {
             LOG.error("Error editing message reply markup", e);
+            return null;
         }
     }
 
+    @Override
+    public Integer editMessage(Long chatId, Integer messageId, String text) {
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(String.valueOf(chatId));
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+//        editMessageText.setParseMode("MarkdownV2");
+        try {
+            Message message = (Message) bot.execute(editMessageText);
+            return message.getMessageId();
+        } catch (TelegramApiException e) {
+            LOG.error("Error editing message reply markup", e);
+            return null;
+        }
+    }
 }

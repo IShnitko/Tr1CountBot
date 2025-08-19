@@ -8,6 +8,7 @@ public interface MessageService {
     Integer sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard);
     void answerCallbackQuery(String callbackQueryId);
     void deleteMessage(Long chatId, Integer messageId);
-    void editMessage(EditMessageReplyMarkup editMessage);
-    void editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboardMarkup);
+    Integer editMessage(EditMessageReplyMarkup editMessage);
+    Integer editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboardMarkup);
+    Integer editMessage(Long chatId, Integer messageId, String text);
 }
