@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserStateManager {
     private final Map<Long, UserState> userStates = new ConcurrentHashMap<>();
     private final Map<Long, String> chosenGroups = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> messageIds = new ConcurrentHashMap<>();
     private final Map<Long, CreateExpenseDto> userExpenseDtos = new ConcurrentHashMap<>();
 
     public void setState(Long chatId, UserState state) {
@@ -27,6 +28,14 @@ public class UserStateManager {
 
     public String getChosenGroup(Long chatId) {
         return chosenGroups.get(chatId);
+    }
+
+    public void setBotMessageId(Long chatId, Integer messageId) {
+        messageIds.put(chatId, messageId);
+    }
+
+    public Integer getBotMessageId(Long chatId) {
+        return messageIds.getOrDefault(chatId, null);
     }
 
     public void clearState(Long chatId) {
