@@ -1,7 +1,6 @@
 package com.IShnitko.Tr1Count_bot.bot.service.impl;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
-import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
@@ -19,25 +18,46 @@ public class GroupManagementServiceImpl implements GroupManagementService {
         this.keyboardFactory = keyboardFactory;
         this.messageService = messageService;
     }
+
     @Override
-    public void groupHelpCommand(Long chatId) {
+    public void groupHelpCommand(Long chatId, Integer messageId) {
         String text = """
-        💡 *Group Help*
-        
-        Available commands:
-        - /balance: Show current balances
-        - /add_expense: Record new expense
-        - /members: List group members
-        - /help: Show this message
-        - /back: Return to main menu
-        """;
-        messageService.sendMessage(chatId, text);
+                💡 *Group Help*
+                
+                Available commands:
+                - /balance: Show current balances
+                - /add_expense: Record new expense
+                - /members: List group members
+                - /help: Show this message
+                - /back: Return to main menu
+                """;
+        messageService.editMessage(chatId, messageId, text, keyboardFactory.returnButton());
     }
 
     @Override
-    public void displayGroup(Long chatId, String groupCode) {
-        messageService.sendMessage(chatId,
-                "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
-                keyboardFactory.groupMenu());
+    public void displayGroup(Long chatId, String groupCode, Integer botMessageId, Integer inputMessageId) {
+        if (inputMessageId != null) messageService.deleteMessage(chatId, inputMessageId);
+//        messageService.deleteMessage(chatId, inputMessageId);
+        if (botMessageId == null)
+            messageService.sendMessage(chatId, "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        else {
+            messageService.editMessage(chatId, botMessageId,
+                    "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        }
+
+    }
+
+    @Override
+    public void displayGroup(Long chatId, String groupCode, Integer botMessageId) {
+        if (botMessageId == null)
+            messageService.sendMessage(chatId, "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        else {
+            messageService.editMessage(chatId, botMessageId,
+                    "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        }
     }
 }
