@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,4 +24,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findUsersByGroup(String groupId);
 
     List<User> findAllByTelegramIdIn(Set<Long> longs);
+
+    @Query("SELECT u from User u join Group g on g.createdBy = u where g.id = :groupId")
+    Optional<User> findCreatorOfTheGroup(String groupId);
+
+    boolean existsByTelegramIdIn(List<Long> esIds);
 }
