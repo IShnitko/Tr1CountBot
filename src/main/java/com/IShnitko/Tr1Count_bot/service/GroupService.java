@@ -22,4 +22,8 @@ public interface GroupService {
     void deleteGroup(String groupId);
 
     String getGroupName(String groupId);
+
+    boolean doesGroupExist(String groupId);
+
+    boolean doesUserExistInGroup(Long userId, String groupId);
 }

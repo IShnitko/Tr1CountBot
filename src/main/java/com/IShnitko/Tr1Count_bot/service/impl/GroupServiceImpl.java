@@ -1,17 +1,10 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
-import com.IShnitko.Tr1Count_bot.model.Group;
-import com.IShnitko.Tr1Count_bot.model.GroupMembership;
-import com.IShnitko.Tr1Count_bot.model.User;
-import com.IShnitko.Tr1Count_bot.repository.GroupMembershipRepository;
-import com.IShnitko.Tr1Count_bot.repository.GroupRepository;
-import com.IShnitko.Tr1Count_bot.repository.UserRepository;
+import com.IShnitko.Tr1Count_bot.model.*;
+import com.IShnitko.Tr1Count_bot.repository.*;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.util.GroupCodeGenerator;
-import com.IShnitko.Tr1Count_bot.util.exception.CreatorDeletionException;
-import com.IShnitko.Tr1Count_bot.util.exception.GroupNotFoundException;
-import com.IShnitko.Tr1Count_bot.util.exception.UserAlreadyInGroupException;
-import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
+import com.IShnitko.Tr1Count_bot.util.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -19,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -28,14 +24,18 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final GroupMembershipRepository groupMembershipRepository;
+    private final ExpenseRepository expenseRepository;
+    private final ExpenseShareRepository expenseShareRepository;
 
     @Autowired
     public GroupServiceImpl(GroupRepository groupRepository,
                             UserRepository userRepository,
-                            GroupMembershipRepository groupMembershipRepository) {
+                            GroupMembershipRepository groupMembershipRepository, ExpenseRepository expenseRepository, ExpenseShareRepository expenseShareRepository) {
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.groupMembershipRepository = groupMembershipRepository;
+        this.expenseRepository = expenseRepository;
+        this.expenseShareRepository = expenseShareRepository;
     }
 
     @Override
@@ -103,8 +103,19 @@ public class GroupServiceImpl implements GroupService {
         if (creatorId.equals(userId)) {
             throw new CreatorDeletionException("Cannot delete creator from group");
         }
+        List<Expense> expenses = expenseRepository.findExpensesByGroupId(groupId);
+        List<Long> expenseIds = expenses.stream().map(Expense::getId).collect(Collectors.toList());
 
-        // Удаляем членство
+        List<ExpenseShare> allShares = expenseShareRepository.findByExpenseIdIn(expenseIds);
+        List<Long> esIds = allShares.stream().map(e -> e.getUser().getTelegramId()).toList();
+
+// Corrected logic: Use a method that returns a boolean
+        boolean userHasHistory = userRepository.existsByTelegramIdIn(esIds);
+
+        if (userHasHistory) {
+            throw new NotEmptyHistoryException("User %s has a history of expenses and can't be deleted".formatted(userId));
+        }
+
         int deleted = groupMembershipRepository.deleteByGroupIdAndUser_TelegramId(groupId, userId);
         if (deleted == 0) {
             throw new UserNotFoundException("User not found in group: " + userId);
@@ -145,4 +156,25 @@ public class GroupServiceImpl implements GroupService {
                 .orElseThrow(() -> new GroupNotFoundException("Group not found: " + groupId))
                 .getName();
     }
+
+    @Override
+    public boolean doesGroupExist(String groupId) {
+        return groupRepository.existsGroupById(groupId);
+    }
+
+    @Override
+    @Transactional
+    public boolean doesUserExistInGroup(Long userId, String groupId) {
+        // Get the current user's Telegram ID from the state manager.
+        // Find the group by its ID. Using Optional to handle cases where the group does not exist.
+        Optional<Group> optionalGroup = groupRepository.findGroupById(groupId);
+
+        // If the group is present, check if its list of users contains the current user's ID.
+        return optionalGroup.map(group -> group.getMembers().stream()
+                        // Use anyMatch to find if any user's Telegram ID matches the current user's ID.
+                        // This is an efficient way to check for existence without iterating through all users.
+                        .anyMatch(groupMembership -> groupMembership.getUser().getTelegramId().equals(userId)))
+                .orElse(false);
+    }
+
 }
