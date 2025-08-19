@@ -85,6 +85,13 @@ public class UserServiceImpl implements UserService {
                 .getName();
     }
 
+    @Override
+    public Long getCreatorOfTheGroup(String groupId) {
+        return userRepository.findCreatorOfTheGroup(groupId)
+                .orElseThrow(() -> new UserNotFoundException("Can't find creator of the group " + groupId))
+                .getTelegramId();
+    }
+
     private String escapeMarkdownV2(String text) { // maybe move to utils
         if (text == null) {
             return "";

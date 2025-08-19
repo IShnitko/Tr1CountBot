@@ -6,4 +6,6 @@ public interface UserService {
     void findOrCreateUser(User telegramId);
     String getUserInfoForGroup(Long telegramId, String groupId);
     String getUserNameById(Long telegramId);
+
+    Long getCreatorOfTheGroup(String groupId);
 }
