@@ -20,10 +20,15 @@ public class UserInteractionServiceImpl implements UserInteractionService {
     }
 
     @Override
-    public void startCommand(Long chatId) {
-        messageService.sendMessage(chatId,
-                "Welcome to TriCount bot!\nChoose an option:",
-                keyboardFactory.mainMenu());
+    public void startCommand(Long chatId, Integer messageId) {
+        if (messageId != null) {
+            messageService.editMessage(chatId, messageId, "Welcome to TriCount bot!\nChoose an option:",
+                    keyboardFactory.mainMenu());
+        } else {
+            messageService.sendMessage(chatId,
+                    "Welcome to TriCount bot!\nChoose an option:",
+                    keyboardFactory.mainMenu());
+        }
     }
 
     @Override
@@ -33,14 +38,8 @@ public class UserInteractionServiceImpl implements UserInteractionService {
     }
 
     @Override
-    public void handleBackCommand(Long chatId) {
-        userStateManager.setState(chatId, UserState.DEFAULT);
-        messageService.sendMessage(chatId, "You came back to main menu");
-        startCommand(chatId);
-    }
-
-    @Override
     public void unknownCommand(Long chatId) {
         messageService.sendMessage(chatId, "Unknown command.");
     }
+
 }

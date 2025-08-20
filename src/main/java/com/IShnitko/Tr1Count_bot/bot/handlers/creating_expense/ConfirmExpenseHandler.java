@@ -40,35 +40,36 @@ public class ConfirmExpenseHandler implements StateHandler {
     public void handle(ChatContext context) throws Exception {
         String input = context.getCallbackData();
         Long chatId = context.getChatId();
+        Integer messageId = context.getMessage().getMessageId();
 
         if (input == null) {
             userInteractionService.unknownCommand(chatId);
             return;
         }
         switch (input) {
-            case CONFIRM_SHARED_USERS -> handleConfirm(chatId);
-            case CANCEL_EXPENSE_CREATION -> handleCancel(chatId); // TODO: have to double click to trigger
-            case BACK_COMMAND -> handleReturn(chatId);
+            case CONFIRM_SHARED_USERS -> handleConfirm(chatId, messageId);
+            case CANCEL_EXPENSE_CREATION -> handleCancel(chatId, messageId);
+            case BACK_COMMAND -> handleReturn(chatId, messageId);
         }
         // TODO: after pressing confirm button query is not answered
     }
 
-    private void handleReturn(Long chatId) {
+    private void handleReturn(Long chatId, Integer messageId) {
         userStateManager.setState(chatId, UserState.AWAITING_SHARED_USERS);
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         String groupId = userStateManager.getChosenGroup(chatId);
         List<User> members = groupService.getUsersForGroup(groupId);
-        messageService.sendMessage(chatId, "*Who paid?*", keyboardFactory.createSharedUsersKeyboard(members, expenseDto));
+        messageService.editMessage(chatId, messageId, "*Who paid?*", keyboardFactory.createSharedUsersKeyboard(members, expenseDto));
     }
 
-    private void handleCancel(Long chatId) {
+    private void handleCancel(Long chatId, Integer messageId) {
         String chosenGroup = userStateManager.getChosenGroup(chatId);
         userStateManager.clearUserData(chatId);
         userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, chosenGroup);
-        groupManagementService.displayGroup(chatId, chosenGroup);
+        groupManagementService.displayGroup(chatId, chosenGroup, messageId);
     }
 
-    private void handleConfirm(Long chatId) {
+    private void handleConfirm(Long chatId, Integer messageId) {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
 
         // 2. Pass the DTO to the business service for saving
@@ -79,9 +80,9 @@ public class ConfirmExpenseHandler implements StateHandler {
         userStateManager.clearUserData(chatId);
 
         // 4. Send a success message
-        messageService.sendMessage(chatId, "✅ Expense successfully added!");
+        messageService.sendMessage(chatId, "✅ Expense successfully added!"); // TODO: get rid of that message and move it somewhere
 
         userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, chosenGroup);
-        groupManagementService.displayGroup(chatId, chosenGroup);
+        groupManagementService.displayGroup(chatId, chosenGroup, messageId);
     }
 }

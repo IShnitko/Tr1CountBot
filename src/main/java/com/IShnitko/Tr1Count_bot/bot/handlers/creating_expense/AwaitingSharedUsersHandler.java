@@ -93,7 +93,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
 
         // Build the final summary message
-        String summary = buildSummaryMessage(expenseDto);
+        String summary = expenseDto.toString(userService);
         LOG.info("Summary string is empty: " + summary.isEmpty());
         // Set the state to CONFIRMING_EXPENSE and send the final message with buttons
         userStateManager.setState(chatId, UserState.CONFIRMING_EXPENSE);
@@ -106,43 +106,10 @@ public class AwaitingSharedUsersHandler implements StateHandler {
 
     private void handleReturn(ChatContext context) {
         Long chatId = context.getChatId();
-        userStateManager.clearUserData(chatId);
         userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
         messageService.sendMessage(chatId, "Choose who paid for this purchase:", keyboardFactory.membersMenu( // TODO: add deleting or editing message
                 groupService.getUsersForGroup(
                         userStateManager.getChosenGroup(chatId)
                 ), false)); // TODO: i think i should extract every method that is duplicated to service
-    }
-
-    private String buildSummaryMessage(CreateExpenseDto expenseDto) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("💸 *New Expense Summary*:\n\n");
-        builder.append("💵 *Title*: ").append(expenseDto.getTitle()).append("\n");
-        builder.append("💰 *Amount*: ").append(expenseDto.getAmount()).append("\n");
-
-        String paidByUserName = userService.getUserNameById(expenseDto.getPaidByUserId());
-        builder.append("👤 *Paid by*: ").append(paidByUserName).append("\n\n");
-
-        builder.append("👥 *Shared with*:\n");
-        String sharedUsersString = expenseDto.getSharedUsers().entrySet().stream()
-                .filter(Map.Entry::getValue)
-                .map(entry -> userService.getUserNameById(entry.getKey()))
-                .collect(Collectors.joining(", "));
-
-        if (sharedUsersString.isEmpty()) {
-            builder.append("- No one\n");
-        } else {
-            builder.append(sharedUsersString).append("\n");
-        }
-
-        builder.append("\n🗓️ *Date*: ");
-        if (expenseDto.getDate() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            builder.append(expenseDto.getDate().format(formatter));
-        } else {
-            builder.append("Not specified");
-        }
-
-        return builder.toString();
     }
 }

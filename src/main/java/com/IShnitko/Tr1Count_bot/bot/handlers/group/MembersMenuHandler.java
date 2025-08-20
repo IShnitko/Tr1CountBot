@@ -51,10 +51,10 @@ public class MembersMenuHandler  implements StateHandler {
     private void deleteMember(ChatContext context, String groupCode, String input) {
         Long userId = Long.valueOf(input.split("_")[1]);
         try {
-            groupService.deleteUserFromGroup(groupCode, userId); // TODO: only creator of the group can delete members
-            messageService.sendMessage(context.getChatId(), "Successfully deleted group member");
+            groupService.deleteUserFromGroup(groupCode, userId);
+//            messageService.sendMessage(context.getChatId(), "Successfully deleted group member"); // TODO: move this message somewhere
             userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
-            groupManagementService.displayGroup(context.getChatId(), groupCode);
+            groupManagementService.displayGroup(context.getChatId(), groupCode, context.getMessage().getMessageId());
         } catch (UserNotFoundException e) {
             messageService.sendMessage(context.getChatId(), "Error occurred while deleting this user, try again later!!");
         } catch (CreatorDeletionException e) {
@@ -70,8 +70,7 @@ public class MembersMenuHandler  implements StateHandler {
     }
 
     private void returnToGroup(ChatContext context, String groupCode) {
-        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
-        groupManagementService.displayGroup(context.getChatId(), groupCode);
+        groupManagementService.displayGroup(context.getChatId(), groupCode, context.getMessage().getMessageId());
     }
 }

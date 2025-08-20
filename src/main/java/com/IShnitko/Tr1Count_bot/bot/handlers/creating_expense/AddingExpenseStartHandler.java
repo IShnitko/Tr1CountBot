@@ -1,7 +1,6 @@
 package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
-import com.IShnitko.Tr1Count_bot.bot.Tr1CountBot;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
@@ -9,8 +8,6 @@ import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-import com.IShnitko.Tr1Count_bot.model.User;
-import com.IShnitko.Tr1Count_bot.service.impl.GroupServiceImpl;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +50,7 @@ public class AddingExpenseStartHandler implements StateHandler {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);
             messageService.deleteMessage(chatId, messageId);
-            groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId));
+            groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId), context.getMessage().getMessageId());
             return;
         }
 

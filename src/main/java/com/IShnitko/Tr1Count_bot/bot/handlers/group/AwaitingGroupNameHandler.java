@@ -12,8 +12,6 @@ import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -35,27 +33,28 @@ public class AwaitingGroupNameHandler implements StateHandler {
         String input = context.getText() != null ? context.getText() : context.getCallbackData();
 
         if (Objects.equals(input, BACK_COMMAND)) {
-            messageService.answerCallbackQuery(context.getCallbackQueryId());
-            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
             userStateManager.setState(context.getChatId(), UserState.DEFAULT);
-            userInteractionService.startCommand(context.getChatId());
+            userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId());
         } else if (context.getText() != null) {
-            handleInputGroupName(context.getChatId(), context.getUser().getId(), input, context.getMessage().getMessageId());
+            handleInputGroupName(context, input);
         } else {
             userInteractionService.unknownCommand(context.getChatId());
         }
     }
 
-    private void handleInputGroupName(Long chatId, Long userId, String groupName, Integer messageId) { // TODO: maybe change signature to just take context
-        messageService.deleteMessage(chatId, messageId);
+    private void handleInputGroupName(ChatContext context, String groupName) {
+        Long chatId = context.getChatId();
+        Integer messageId = context.getMessage().getMessageId();
         try {
-            Group group = groupService.createGroup(groupName, userId);
+            Group group = groupService.createGroup(groupName, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, group.getId());
             String text = "Group created! Invite link: https://t.me/Tr1Count_bot?start=invite_" + group.getId();
-            messageService.sendMessage(chatId, text);
-            groupManagementService.displayGroup(chatId, group.getId());
+//            messageService.sendMessage(chatId, text);
+            groupManagementService.displayGroup(chatId, group.getId(), messageId);
         } catch (UserNotFoundException e) {
             messageService.sendMessage(chatId, "Error creating group");
+            userStateManager.setState(chatId, UserState.DEFAULT);
+            userInteractionService.startCommand(chatId, messageId);
         }
     }
 }

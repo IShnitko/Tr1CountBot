@@ -12,15 +12,19 @@ import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
+import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.util.TelegramApiUtils;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 
@@ -28,6 +32,8 @@ import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 @StateHandlerFor(UserState.IN_THE_GROUP)
 @RequiredArgsConstructor
 public class InGroupStateHandler implements StateHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(InGroupStateHandler.class);
+
     private final MessageService messageService;
     private final GroupManagementService groupManagementService;
     private final UserInteractionService userInteractionService;
@@ -36,13 +42,14 @@ public class InGroupStateHandler implements StateHandler {
     private final BalanceService balanceService;
     private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
+    private final UserService userService;
 
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
         String groupId = userStateManager.getChosenGroup(context.getChatId());
-
         String command = context.getText() != null ? context.getText() : context.getCallbackData();
+
         if (command == null) {
             userInteractionService.unknownCommand(context.getChatId());
             return;
@@ -71,20 +78,23 @@ public class InGroupStateHandler implements StateHandler {
 
         // Build the message to send to the user.
         // Use MarkdownV2 for formatting.
-        StringBuilder message = new StringBuilder();
-        message.append("🔗 *Here is the link to share with your friends to join the group\\:* \n\n");
+        String message = "🔗 *Here is the link to share with your friends to join the group\\:* \n\n" +
 //        message.append(TelegramApiUtils.formatString(joinLink)); // TODO: implement markdownv2
-        message.append(joinLink);
+                joinLink;
 
-        messageService.sendMessage(context.getChatId(), message.toString());
+        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
+        messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), message, keyboardFactory.returnButton());
     }
 
     private void showHistory(ChatContext context, String groupId) {
         List<Expense> expenses = balanceService.getExpensesForGroup(groupId);
-
+        Long chatId = context.getChatId();
+        userStateManager.setState(chatId, UserState.ONLY_RETURN_TO_GROUP);
         // Check if there are any expenses to display
+        Integer messageId = context.getMessage().getMessageId();
+
         if (expenses.isEmpty()) {
-            messageService.sendMessage(context.getChatId(), "There are no expenses recorded in this group yet\\.");
+            messageService.editMessage(chatId, messageId, "There are no expenses recorded in this group yet\\.", keyboardFactory.returnButton());
             return;
         }
 
@@ -107,10 +117,13 @@ public class InGroupStateHandler implements StateHandler {
 
             // Append formatted expense details
             messageBuilder.append(String.format(
-                    "💸 *%s*\n" +
-                            "  💵 Amount: `%.2f`\n" +
-                            "  👤 Paid by: %s\n" +
-                            "  🗓️ Date: %s\n\n",
+                    """
+                            💸 *%s*
+                              💵 Amount: `%.2f`
+                              👤 Paid by: %s
+                              🗓️ Date: %s
+                            
+                            """,
                     title,
                     expense.getAmount(),
                     paidBy,
@@ -119,16 +132,17 @@ public class InGroupStateHandler implements StateHandler {
         }
 
         // Send the complete, formatted message
-        messageService.sendMessage(context.getChatId(), messageBuilder.toString());
+        messageService.editMessage(chatId, messageId, messageBuilder.toString(), keyboardFactory.returnButton());
     }
 
     private void handleBalance(ChatContext context, String groupId) {
         try {
             String balanceText = balanceService.getBalanceText(groupId);
-
-            messageService.sendMessage(context.getChatId(), balanceText);
+            userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
+            messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), balanceText, keyboardFactory.returnButton());
         } catch (Exception e) {
-            messageService.sendMessage(context.getChatId(), "❌ Error calculating balance");
+            LOG.error("Error while calculating balance", e);
+            messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), "❌ Error calculating balance", keyboardFactory.returnButton());
         }
     }
 
@@ -143,38 +157,45 @@ public class InGroupStateHandler implements StateHandler {
             // Отправляем инструкцию
             String instructions = """
                 💸 *Add New Expense*
-                                
+                               \s
                 Please send expense details in format:
                 `<description> <amount>`
-                                
+                               \s
                 Example:
                 `Dinner 25.50`
-                """;
+               \s""";
             messageService.deleteMessage(chatId, messageId);
             Integer sentMessageId = messageService.sendMessage(chatId, instructions, keyboardFactory.returnButton());
             expenseDto.setMessageId(sentMessageId);
         } catch (Exception e) {
             messageService.deleteMessage(chatId, messageId);
-            messageService.sendMessage(chatId, "❌ Error starting expense creation");
+            messageService.sendMessage(chatId, "❌ Error starting expense creation"); // TODO: fix the editing of the message (now it breaks chat)
         }
     }
 
+
     private void handleMembers(ChatContext context, String groupId) {
         Long chatId = context.getChatId();
+        Long userId = context.getUser().getId();
+        Integer messageId = context.getMessage().getMessageId();
         try {
             List<User> members = groupService.getUsersForGroup(groupId);
-            Integer messageId = context.getMessage().getMessageId();
-            messageService.deleteMessage(chatId, messageId);
-            messageService.sendMessage(chatId, "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
+            if (Objects.equals(userService.getCreatorOfTheGroup(groupId), userId)) {
+                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
+            } else {
+                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, false));
+            }
             userStateManager.setState(chatId, UserState.MEMBERS_MENU);
         } catch (Exception e) {
-            messageService.sendMessage(chatId, "❌ Error retrieving members");
+            messageService.editMessage(chatId, messageId,"❌ Error retrieving members", keyboardFactory.returnButton());
+            userStateManager.setState(chatId, UserState.ONLY_RETURN_TO_GROUP);
         }
     }
 
     private void handleHelp(ChatContext context) {
         // Используем метод бота для показа справки
-        groupManagementService.groupHelpCommand(context.getChatId());
+        groupManagementService.groupHelpCommand(context.getChatId(), context.getMessage().getMessageId());
+        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
     }
 
     private void handleBackToMain(ChatContext context) {
@@ -183,8 +204,7 @@ public class InGroupStateHandler implements StateHandler {
 
         // Сбрасываем выбранную группу
         userStateManager.clearChosenGroup(context.getChatId());
-        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         // Показываем главное меню
-        userInteractionService.startCommand(context.getChatId());
+        userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId());
     }
 }

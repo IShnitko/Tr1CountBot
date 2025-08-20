@@ -14,7 +14,6 @@ import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.util.List;
 
@@ -47,7 +46,6 @@ public class DefaultStateHandler implements StateHandler {
             case START -> handleStart(context, input);
             case HELP -> userInteractionService.helpCommand(context.getChatId());
             case JOIN -> handleJoin(context, input);
-            case BACK_COMMAND -> userInteractionService.handleBackCommand(context.getChatId());
             case CREATE -> handleCreate(context);
             case GROUPS -> chooseGroup(context);
             default -> userInteractionService.unknownCommand(context.getChatId());
@@ -58,7 +56,7 @@ public class DefaultStateHandler implements StateHandler {
         if (input.startsWith(START + " invite_")) {
             handleInvitation(context, input);
         } else {
-            userInteractionService.startCommand(context.getChatId());
+            userInteractionService.startCommand(context.getChatId(), null);
         }
     }
 
@@ -67,8 +65,7 @@ public class DefaultStateHandler implements StateHandler {
         try {
             groupService.joinGroupById(groupId, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, groupId);
-            messageService.sendMessage(context.getChatId(), "You successfully joined group " + groupId + "!");
-            groupManagementService.displayGroup(context.getChatId(), groupId);
+            groupManagementService.displayGroup(context.getChatId(), groupId, null);
         } catch (GroupNotFoundException e) {
             messageService.sendMessage(context.getChatId(), "Group not found: " + groupId);
         } catch (UserAlreadyInGroupException e) {
@@ -81,8 +78,12 @@ public class DefaultStateHandler implements StateHandler {
             String groupCode = input.substring(JOIN.length()).trim();
             joinGroup(context, groupCode);
         } else {
-            messageService.sendMessage(context.getChatId(), "Enter group code:");
-            // Здесь можно установить состояние ожидания кода
+            userStateManager.setBotMessageId(context.getChatId(),
+                    messageService.editMessage(context.getChatId(),
+                            context.getMessage().getMessageId(),
+                            "Enter group code:",
+                            keyboardFactory.returnButton()));
+            userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_ID);
         }
     }
 
@@ -90,9 +91,7 @@ public class DefaultStateHandler implements StateHandler {
         try {
             groupService.joinGroupById(groupCode, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, groupCode);
-            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-            messageService.sendMessage(context.getChatId(), "You joined group: " + groupCode);
-            groupManagementService.displayGroup(context.getChatId(), groupCode);
+            groupManagementService.displayGroup(context.getChatId(), groupCode, context.getMessage().getMessageId());
         } catch (GroupNotFoundException e) {
             messageService.sendMessage(context.getChatId(), "Group not found: " + groupCode);
         } catch (UserAlreadyInGroupException e) {
@@ -101,20 +100,19 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleCreate(ChatContext context) {
-        messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-        messageService.sendMessage(context.getChatId(), "Enter group name:", keyboardFactory.returnButton());
+        messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), "Enter group name:", keyboardFactory.returnButton());
         userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_NAME);
     }
 
     private void chooseGroup(ChatContext context) {
         List<Group> groups = groupService.getGroupsForUser(context.getUser().getId());
+        Long chatId = context.getChatId();
         if (groups.isEmpty()) {
-            messageService.sendMessage(context.getChatId(), "You're not in any groups yet!");
+            messageService.sendMessage(chatId, "You're not in any groups yet!");
         } else {
-            InlineKeyboardMarkup keyboard = keyboardFactory.groupsListMenu(groups);
-            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
-            messageService.sendMessage(context.getChatId(), "Choose a group:", keyboard);
-            userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_ID); // TODO: answer callback
+            messageService.editMessage(chatId, context.getMessage().getMessageId(), "Choose a group:", keyboardFactory.groupsListMenu(groups));
+            userStateManager.setState(chatId, UserState.AWAITING_GROUP_ID);
+            userStateManager.setBotMessageId(chatId, context.getMessage().getMessageId());
         }
     }
 
