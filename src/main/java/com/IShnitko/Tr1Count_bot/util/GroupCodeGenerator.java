@@ -11,6 +11,9 @@ public final class GroupCodeGenerator {
 
     private static final SecureRandom random = new SecureRandom();
 
+    // TODO: create desc
+    //asd
+    //asd
     public static String generateCode(int length) {
         if (length <= 0) {
             throw new IllegalArgumentException("Длина кода должна быть больше 0");
