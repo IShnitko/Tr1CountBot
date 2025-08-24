@@ -7,19 +7,10 @@ import java.security.SecureRandom;
  */
 public final class GroupCodeGenerator {
 
-    // Набор символов для генерации кода: заглавные буквы и цифры.
     private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-    // Используем SecureRandom для криптографически надежной генерации случайных чисел.
-    // Это лучший выбор, чем обычный Random, особенно если уникальность критически важна.
     private static final SecureRandom random = new SecureRandom();
 
-    /**
-     * Генерирует случайный код заданной длины из заглавных букв и цифр.
-     *
-     * @param length Желаемая длина кода (например, 5 для "YFPSJ").
-     * @return Сгенерированный код.
-     */
     public static String generateCode(int length) {
         if (length <= 0) {
             throw new IllegalArgumentException("Длина кода должна быть больше 0");
