@@ -2,7 +2,7 @@ package com.IShnitko.Tr1Count_bot.util;
 
 import java.security.SecureRandom;
 
-public final class GroupCodeGenerator {
+public final class GroupCodeGenerator { // maybe convert to enum
 
     private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
