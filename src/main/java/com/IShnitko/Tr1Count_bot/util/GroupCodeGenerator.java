@@ -21,6 +21,7 @@ public final class GroupCodeGenerator { // maybe convert to enum
 
         StringBuilder codeBuilder = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
+            // Выбираем случайный символ из строки CHARACTERS
             int randomIndex = random.nextInt(CHARACTERS.length());
             codeBuilder.append(CHARACTERS.charAt(randomIndex));
         }

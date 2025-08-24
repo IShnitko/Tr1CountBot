@@ -5,7 +5,7 @@ import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.repository.GroupMembershipRepository;
 import com.IShnitko.Tr1Count_bot.repository.UserRepository;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
+import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

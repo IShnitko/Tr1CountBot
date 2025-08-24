@@ -8,7 +8,7 @@ import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
-import com.IShnitko.Tr1Count_bot.util.exception.UserNotFoundException;
+import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
