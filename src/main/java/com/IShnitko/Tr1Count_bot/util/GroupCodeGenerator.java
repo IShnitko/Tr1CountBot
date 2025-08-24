@@ -15,10 +15,10 @@ public final class GroupCodeGenerator {
     private static final SecureRandom random = new SecureRandom();
 
     /**
-     * Генерирует случайный код заданной длины из заглавных букв и цифр.
+     * Generates code for groups
      *
-     * @param length Желаемая длина кода (например, 5 для "YFPSJ").
-     * @return Сгенерированный код.
+     * @param length code length
+     * @return generated code
      */
     public static String generateCode(int length) {
         if (length <= 0) {
