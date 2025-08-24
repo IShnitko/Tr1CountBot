@@ -1,10 +1,10 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
+import com.IShnitko.Tr1Count_bot.exception.*;
 import com.IShnitko.Tr1Count_bot.model.*;
 import com.IShnitko.Tr1Count_bot.repository.*;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.util.GroupCodeGenerator;
-import com.IShnitko.Tr1Count_bot.util.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
