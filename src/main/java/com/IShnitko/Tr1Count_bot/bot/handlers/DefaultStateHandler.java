@@ -106,8 +106,10 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleCreate(ChatContext context) {
-        messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), "Enter group name:", keyboardFactory.returnButton());
-        userStateManager.setState(context.getChatId(), UserState.AWAITING_GROUP_NAME);
+        Long chatId = context.getChatId();
+        messageService.editMessage(chatId, context.getMessage().getMessageId(), "Enter group name:", keyboardFactory.returnButton());
+        userStateManager.setState(chatId, UserState.AWAITING_GROUP_NAME);
+        userStateManager.setBotMessageId(chatId, context.getMessage().getMessageId());
     }
 
     private void chooseGroup(ChatContext context) {
