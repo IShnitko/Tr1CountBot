@@ -37,7 +37,6 @@ public class InGroupStateHandler implements StateHandler {
 
     private final UserStateManager userStateManager;
     private final BalanceService balanceService;
-    private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
     private final UserService userService;
 
@@ -45,25 +44,31 @@ public class InGroupStateHandler implements StateHandler {
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
         String groupId = userStateManager.getChosenGroup(context.getChatId());
-        String command = context.getText() != null ? context.getText() : context.getCallbackData();
 
-        if (command == null) {
-            userInteractionService.unknownCommand(context.getChatId());
+        if (!groupService.doesGroupExist(groupId)) {
+            userStateManager.setState(context.getChatId(), UserState.DEFAULT);
+            userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId(), "Oops, it seems this group has been deleted!");
             return;
         }
+
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
+        }
+        if (context.getUpdateType() != ChatContext.UpdateType.CALLBACK) {
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+            return;
         }
 
         Command command = Command.fromString(context.getCallbackData());
         switch (command) {
             case BALANCE -> handleBalance(context, groupId);
-            case ADD_EXPENSE -> handleAddExpense(context); // TODO: maybe change taking context to just taking params
-            case MEMBERS -> handleMembers(context, groupId);
+            case ADD_EXPENSE -> handleAddExpense(context);
+            case MEMBERS -> handleMembers(context);
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
             case HISTORY -> showHistory(context, groupId);
-            case LINK -> sendJoinLink(context, groupId);
+            case LINK -> sendJoinLink(context);
+            case DELETE -> handleDelete(context);
             default -> userInteractionService.unknownCommand(context.getChatId());
         }
     }

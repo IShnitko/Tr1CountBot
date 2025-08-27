@@ -34,7 +34,6 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     private final KeyboardFactory keyboardFactory;
     private final UserInteractionService userInteractionService;
     private final UserService userService;
-    private final GroupManagementService groupManagementService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {

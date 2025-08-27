@@ -37,14 +37,17 @@ public class DefaultStateHandler implements StateHandler {
     @Override
     public void handle(ChatContext context) {
         String input = context.getText() != null ? context.getText() : context.getCallbackData();
-        if (input == null) {
-            userInteractionService.unknownCommand(context.getChatId());
-            return;
-        }
+
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
-        String command = input.split(" ")[0];
+        assert input != null;
+        Command command = Command.fromString(input.split(" ")[0]);
+        if (context.getUpdateType() != ChatContext.UpdateType.CALLBACK && !Objects.equals(command, Command.START)) {
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+            return;
+        }
+        log.info("Default Handler got command {}", command.getCommand());
         switch (command) {
             case START -> handleStart(context, input);
             case HELP -> userInteractionService.helpCommand(context.getChatId());

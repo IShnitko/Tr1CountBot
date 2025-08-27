@@ -41,7 +41,7 @@ public class MembersMenuHandler  implements StateHandler {
         Command command = Command.fromString(input.split("_")[0]);
         String groupCode = userStateManager.getChosenGroup(context.getChatId());
         switch (command) {
-            case INFO -> getMemberInfo(context, groupCode, input);
+            case INFO -> getMemberInfo(context, input);
             case DELETE -> deleteMember(context, groupCode, input);
             case BACK_COMMAND -> returnToGroup(context, groupCode);
         }

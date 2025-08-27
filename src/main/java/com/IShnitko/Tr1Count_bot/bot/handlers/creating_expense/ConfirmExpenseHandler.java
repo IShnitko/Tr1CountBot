@@ -34,12 +34,11 @@ public class ConfirmExpenseHandler implements StateHandler {
 
     @Override
     public void handle(ChatContext context) throws Exception {
-        String input = context.getCallbackData();
         Long chatId = context.getChatId();
         Integer messageId = context.getMessage().getMessageId();
 
-        if (input == null) {
-            userInteractionService.unknownCommand(chatId);
+        if (context.getText() != null) {
+            messageService.deleteMessage(chatId, messageId);
             return;
         }
         Command command = Command.fromString(context.getCallbackData());
