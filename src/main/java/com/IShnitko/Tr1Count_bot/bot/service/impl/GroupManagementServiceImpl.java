@@ -66,4 +66,14 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                     keyboardFactory.groupMenu());
         }
     }
+
+    @Override
+    public void sendIncorrectGroupId(Long chatId, Integer messageId) { // TODO: this throws TelegramApiRequestException, idk how to fix it
+        messageService.deleteMessage(chatId, messageId);
+        messageService.editMessage(chatId,
+                userStateManager.getBotMessageId(chatId),
+                "Incorrect group Id. Try again:",
+                keyboardFactory.returnButton());
+    }
+
 }

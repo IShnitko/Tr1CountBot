@@ -12,18 +12,16 @@ import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 
 @Component
 @StateHandlerFor(UserState.AWAITING_GROUP_ID)
 @RequiredArgsConstructor
 public class AwaitingGroupIdHandler implements StateHandler {
-    private final MessageService messageService;
     private final UserStateManager userStateManager;
     private final GroupManagementService groupManagementService;
     private final UserInteractionService userInteractionService;
     private final GroupService groupService;
-    private final KeyboardFactory keyboardFactory;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -37,7 +35,7 @@ public class AwaitingGroupIdHandler implements StateHandler {
         handleValidSelection(context, input);
     }
 
-    private void handleValidSelection(ChatContext context, String groupId) {
+    private void handleValidSelection(ChatContext context, String groupId) throws TelegramApiRequestException {
         Long chatId = context.getChatId();
         if (groupService.doesGroupExist(groupId)) {
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, groupId);
@@ -47,8 +45,7 @@ public class AwaitingGroupIdHandler implements StateHandler {
                     userStateManager.getBotMessageId(chatId),
                     context.getUpdateType() == ChatContext.UpdateType.MESSAGE ? context.getMessage().getMessageId() : null); // if user inputted groupId manually, then we delete his message
         } else {
-            messageService.deleteMessage(chatId, context.getMessage().getMessageId());
-            messageService.editMessage(chatId, userStateManager.getBotMessageId(chatId), "Incorrect group Id. Try again:", keyboardFactory.returnButton());
+            groupManagementService.sendIncorrectGroupId(chatId, context.getMessage().getMessageId());
         }
     }
 }
