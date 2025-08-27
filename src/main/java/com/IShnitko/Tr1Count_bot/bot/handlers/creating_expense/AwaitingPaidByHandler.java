@@ -31,8 +31,8 @@ public class AwaitingPaidByHandler implements StateHandler {
         String input = context.getCallbackData();
         Long chatId = context.getChatId();
         messageService.deleteMessage(chatId, context.getMessage().getMessageId());
-        if (input == null) {
-            userInteractionService.unknownCommand(chatId);
+        if (context.getText() != null) {
+            messageService.deleteMessage(chatId, context.getMessage().getMessageId());
             return;
         }
 
