@@ -3,8 +3,7 @@ package com.IShnitko.Tr1Count_bot.bot.service.impl;
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,6 +28,14 @@ public class UserInteractionServiceImpl implements UserInteractionService {
                     "Welcome to TriCount bot!\nChoose an option:",
                     keyboardFactory.mainMenu());
         }
+    }
+
+    @Override
+    public void startCommand(Long chatId, Integer messageId, String additionalText) {
+        messageService.editMessage(chatId,
+                messageId,
+                additionalText + "\n\nThis is TriCount bot!\nChoose an option:",
+                keyboardFactory.mainMenu());
     }
 
     @Override

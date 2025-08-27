@@ -2,20 +2,20 @@ package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
-import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
-import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.util.TelegramApiUtils;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +24,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Objects;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 
 @Component
 @StateHandlerFor(UserState.IN_THE_GROUP)
@@ -40,50 +37,64 @@ public class InGroupStateHandler implements StateHandler {
 
     private final UserStateManager userStateManager;
     private final BalanceService balanceService;
-    private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
+    private final GroupService groupService;
     private final UserService userService;
 
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
         String groupId = userStateManager.getChosenGroup(context.getChatId());
-        String command = context.getText() != null ? context.getText() : context.getCallbackData();
 
-        if (command == null) {
-            userInteractionService.unknownCommand(context.getChatId());
+        if (!groupService.doesGroupExist(groupId)) {
+            userStateManager.setState(context.getChatId(), UserState.DEFAULT);
+            userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId(), "Oops, it seems this group has been deleted!");
             return;
         }
+
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
+        if (context.getUpdateType() != ChatContext.UpdateType.CALLBACK) {
+            messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
+            return;
+        }
 
-        switch (command) { // TODO: add Invitation link and expense history
+        Command command = Command.fromString(context.getCallbackData());
+        switch (command) {
             case BALANCE -> handleBalance(context, groupId);
-            case ADD_EXPENSE -> handleAddExpense(context); // TODO: maybe change taking context to just taking params
-            case MEMBERS -> handleMembers(context, groupId);
+            case ADD_EXPENSE -> handleAddExpense(context);
+            case MEMBERS -> handleMembers(context);
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
             case HISTORY -> showHistory(context, groupId);
-            case LINK -> sendJoinLink(context, groupId);
+            case LINK -> sendJoinLink(context);
+            case DELETE -> handleDelete(context);
             default -> userInteractionService.unknownCommand(context.getChatId());
         }
     }
 
-    private void sendJoinLink(ChatContext context, String groupId) throws TelegramApiException {
-        // Construct the deep link URL.
-        // The bot's username is retrieved from the bot's configuration,
-        // and the start parameter is the groupId.
-        String joinLink = String.format("https://t.me/Tr1Count_bot?start=invite_%s", groupId);
+    private void handleDelete(ChatContext context) {
+        Long chatId = context.getChatId();
+        String chosenGroup = userStateManager.getChosenGroup(chatId);
+        String groupName = groupService.getGroupName(chosenGroup);
+        if (context.getUser().getId().equals(userService.getCreatorOfTheGroup(chosenGroup))){
+            groupService.deleteGroup(chosenGroup);
+            userStateManager.setState(chatId, UserState.DEFAULT);
+            userInteractionService.startCommand(chatId, context.getMessage().getMessageId(), "Deleted group " + groupName);
+            userStateManager.clearChosenGroup(chatId); // so basically i want to store states, because if someone is in group state and group is deleted, then nothing happens
+        } else {
+            groupManagementService.displayGroup(chatId,
+                    chosenGroup,
+                    null,
+                    context.getMessage().getMessageId(),
+                    "You can't delete this group, because you are not the creator");
+        }
+    }
 
-        // Build the message to send to the user.
-        // Use MarkdownV2 for formatting.
-        String message = "🔗 *Here is the link to share with your friends to join the group\\:* \n\n" +
-//        message.append(TelegramApiUtils.formatString(joinLink)); // TODO: implement markdownv2
-                joinLink;
-
+    private void sendJoinLink(ChatContext context) {
+        groupManagementService.sendJoinLink(context.getChatId(), context.getMessage().getMessageId());
         userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
-        messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), message, keyboardFactory.returnButton());
     }
 
     private void showHistory(ChatContext context, String groupId) {
@@ -136,9 +147,9 @@ public class InGroupStateHandler implements StateHandler {
     }
 
     private void handleBalance(ChatContext context, String groupId) {
+        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
         try {
             String balanceText = balanceService.getBalanceText(groupId);
-            userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
             messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), balanceText, keyboardFactory.returnButton());
         } catch (Exception e) {
             LOG.error("Error while calculating balance", e);
@@ -173,23 +184,9 @@ public class InGroupStateHandler implements StateHandler {
         }
     }
 
-
-    private void handleMembers(ChatContext context, String groupId) {
-        Long chatId = context.getChatId();
-        Long userId = context.getUser().getId();
-        Integer messageId = context.getMessage().getMessageId();
-        try {
-            List<User> members = groupService.getUsersForGroup(groupId);
-            if (Objects.equals(userService.getCreatorOfTheGroup(groupId), userId)) {
-                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
-            } else {
-                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, false));
-            }
-            userStateManager.setState(chatId, UserState.MEMBERS_MENU);
-        } catch (Exception e) {
-            messageService.editMessage(chatId, messageId,"❌ Error retrieving members", keyboardFactory.returnButton());
-            userStateManager.setState(chatId, UserState.ONLY_RETURN_TO_GROUP);
-        }
+    private void handleMembers(ChatContext context) {
+        userStateManager.setState(context.getChatId(), UserState.MEMBERS_MENU);
+        groupManagementService.viewMembersMenu(context.getChatId(), context.getMessage().getMessageId(), context.getUser().getId());
     }
 
     private void handleHelp(ChatContext context) {

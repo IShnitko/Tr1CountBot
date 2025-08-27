@@ -1,12 +1,11 @@
 package com.IShnitko.Tr1Count_bot.bot;
 
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandlerFactory;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandlerFactory;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,22 +13,8 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
+@Slf4j
 public class Tr1CountBot extends TelegramLongPollingBot {
-    private static final Logger LOG = LoggerFactory.getLogger(Tr1CountBot.class);
-
-    public static final String START = "/start";
-    public static final String HELP = "/help";
-    public static final String JOIN = "/join";
-    public static final String CREATE = "/create";
-    public static final String GROUPS = "/groups";
-    public static final String BALANCE = "/balance";
-    public static final String ADD_EXPENSE = "/add_expense";
-    public static final String MEMBERS = "/members";
-    public static final String BACK_COMMAND = "/back";
-    public static final String DELETE = "/delete";
-    public static final String HISTORY = "/history";
-    public static final String LINK = "/link";
-    public static final String INFO = "/info";
 
     private final UserService userService;
     private final UserStateManager userStateManager;
@@ -56,12 +41,12 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
             String text = context.getText() != null ? context.getText() : context.getCallbackData();
 
-            LOG.info("Processing {} ({}) from {} in state: {}",
+            log.info("Processing {} ({}) from {} in state: {}",
                     context.getUpdateType(), text, context.getChatId(), state);
 
             stateHandlerFactory.getHandler(state).handle(context);
         } catch (Exception e) {
-            LOG.error("Error processing update", e);
+            log.error("Error processing update", e);
         }
     }
 

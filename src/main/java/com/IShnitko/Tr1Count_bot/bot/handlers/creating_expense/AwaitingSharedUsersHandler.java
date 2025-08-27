@@ -2,8 +2,9 @@ package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
-import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
@@ -11,8 +12,8 @@ import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +21,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
 
 @Component
 @StateHandlerFor(UserState.AWAITING_SHARED_USERS)
@@ -38,7 +34,6 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     private final KeyboardFactory keyboardFactory;
     private final UserInteractionService userInteractionService;
     private final UserService userService;
-    private final GroupManagementService groupManagementService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -57,7 +52,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
             handleUserSelection(context, callbackData);
         } else if (callbackData.equals("confirm_shared_users")) {
             handleConfirm(context);
-        } else if (callbackData.equals(BACK_COMMAND)) { // TODO: after pressing button it still shows as chosen
+        } else if (callbackData.equals(Command.BACK_COMMAND.getCommand())) { // TODO: after pressing button it still shows as chosen
             handleReturn(context);
         }
     }

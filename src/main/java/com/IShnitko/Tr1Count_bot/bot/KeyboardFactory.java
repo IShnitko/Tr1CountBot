@@ -1,23 +1,16 @@
 package com.IShnitko.Tr1Count_bot.bot;
 
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
-import com.IShnitko.Tr1Count_bot.service.GroupService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
-import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.AwaitingDateHandler.DEFAULT_DATE_COMMAND;
-import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.ConfirmExpenseHandler.CANCEL_EXPENSE_CREATION;
-import static com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense.ConfirmExpenseHandler.CONFIRM_SHARED_USERS;
 
 @Component
 public class KeyboardFactory {
@@ -29,28 +22,28 @@ public class KeyboardFactory {
 
         row.add(InlineKeyboardButton.builder()
                 .text("Join group by code")
-                .callbackData(JOIN)
+                .callbackData(Command.JOIN.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
-                .text("Create code")
-                .callbackData(CREATE)
+                .text("Create group")
+                .callbackData(Command.CREATE.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("List groups")
-                .callbackData(GROUPS)
+                .callbackData(Command.GROUPS.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Help")
-                .callbackData(HELP)
+                .callbackData(Command.HELP.getCommand())
                 .build());
         rows.add(row);
 
@@ -65,43 +58,50 @@ public class KeyboardFactory {
         List<InlineKeyboardButton> row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Balance of the group")
-                .callbackData(BALANCE)
+                .callbackData(Command.BALANCE.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Add expense")
-                .callbackData(ADD_EXPENSE)
+                .callbackData(Command.ADD_EXPENSE.getCommand())
                 .build());
         row.add(InlineKeyboardButton.builder()
                 .text("View expense history")
-                .callbackData(HISTORY)
+                .callbackData(Command.HISTORY.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Group members")
-                .callbackData(MEMBERS)
+                .callbackData(Command.MEMBERS.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Help")
-                .callbackData(HELP)
+                .callbackData(Command.HELP.getCommand())
                 .build());
         row.add(InlineKeyboardButton.builder()
                 .text("Invite friends")
-                .callbackData(LINK)
+                .callbackData(Command.LINK.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Delete group")
+                .callbackData(Command.DELETE.getCommand())
                 .build());
         rows.add(row);
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Return to main menu")
-                .callbackData(BACK_COMMAND)
+                .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
         rows.add(row);
         inlineKeyboard.setKeyboard(rows);
@@ -131,7 +131,7 @@ public class KeyboardFactory {
         List<InlineKeyboardButton> row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Return")
-                .callbackData(BACK_COMMAND)
+                .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
         rows.add(row);
         inlineKeyboard.setKeyboard(rows);
@@ -160,10 +160,10 @@ public class KeyboardFactory {
             String paddedName = name + " ".repeat(paddingLength);
 
             InlineKeyboardButton nameButton = new InlineKeyboardButton(paddedName);
-            nameButton.setCallbackData(INFO + "_" + member.getTelegramId());
+            nameButton.setCallbackData(Command.INFO.getCommand() + "_" + member.getTelegramId());
 
             InlineKeyboardButton deleteButton = new InlineKeyboardButton("❌");
-            deleteButton.setCallbackData(DELETE + "_" + member.getTelegramId());
+            deleteButton.setCallbackData(Command.DELETE.getCommand() + "_" + member.getTelegramId());
 
 
             List<InlineKeyboardButton> row = new ArrayList<>();
@@ -174,12 +174,12 @@ public class KeyboardFactory {
         }
 
         InlineKeyboardButton backButton = new InlineKeyboardButton("↩️ Back to Group Menu");
-        backButton.setCallbackData(BACK_COMMAND);
+        backButton.setCallbackData(Command.BACK_COMMAND.getCommand());
         keyboard.add(Collections.singletonList(backButton));
 
         return new InlineKeyboardMarkup(keyboard);
     }
-    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) { // TODO: if no button is pressed then no cross or checkmark is shown
+    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
@@ -210,7 +210,7 @@ public class KeyboardFactory {
 
         InlineKeyboardButton cancelButton = new InlineKeyboardButton();
         cancelButton.setText("Return");
-        cancelButton.setCallbackData(BACK_COMMAND);
+        cancelButton.setCallbackData(Command.BACK_COMMAND.getCommand());
 
         List<InlineKeyboardButton> finalRow = new ArrayList<>();
         finalRow.add(confirmButton);
@@ -227,13 +227,13 @@ public class KeyboardFactory {
         List<InlineKeyboardButton> row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Today")
-                .callbackData(DEFAULT_DATE_COMMAND)
+                .callbackData(Command.DEFAULT_DATE_COMMAND.getCommand())
                 .build());
         rows.add(row);
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Return")
-                .callbackData(BACK_COMMAND)
+                .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
         rows.add(row);
         inlineKeyboard.setKeyboard(rows);
@@ -247,21 +247,21 @@ public class KeyboardFactory {
 
         row.add(InlineKeyboardButton.builder()
                 .text("✅ Confirm")
-                .callbackData(CONFIRM_SHARED_USERS)
+                .callbackData(Command.CONFIRM_SHARED_USERS.getCommand())
                 .build());
         rows.add(row);
         row = new ArrayList<>();
 
         row.add(InlineKeyboardButton.builder()
                 .text("❌ Cancel")
-                .callbackData(CANCEL_EXPENSE_CREATION)
+                .callbackData(Command.CANCEL_EXPENSE_CREATION.getCommand())
                 .build());
         rows.add(row);
         row = new ArrayList<>();
 
         row.add(InlineKeyboardButton.builder()
                 .text("Return")
-                .callbackData(BACK_COMMAND)
+                .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
         rows.add(row);
 

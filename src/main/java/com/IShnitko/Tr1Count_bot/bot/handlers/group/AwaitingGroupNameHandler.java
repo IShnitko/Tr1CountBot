@@ -1,22 +1,21 @@
 package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
-import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
 
 @Component
 @StateHandlerFor(UserState.AWAITING_GROUP_NAME)
@@ -32,13 +31,11 @@ public class AwaitingGroupNameHandler implements StateHandler {
     public void handle(ChatContext context) throws Exception {
         String input = context.getText() != null ? context.getText() : context.getCallbackData();
 
-        if (Objects.equals(input, BACK_COMMAND)) {
+        if (Objects.equals(input, Command.BACK_COMMAND.getCommand())) {
             userStateManager.setState(context.getChatId(), UserState.DEFAULT);
             userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId());
         } else if (context.getText() != null) {
             handleInputGroupName(context, input);
-        } else {
-            userInteractionService.unknownCommand(context.getChatId());
         }
     }
 
@@ -48,13 +45,14 @@ public class AwaitingGroupNameHandler implements StateHandler {
         try {
             Group group = groupService.createGroup(groupName, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, group.getId());
-            String text = "Group created! Invite link: https://t.me/Tr1Count_bot?start=invite_" + group.getId();
-//            messageService.sendMessage(chatId, text);
-            groupManagementService.displayGroup(chatId, group.getId(), messageId);
+            groupManagementService.displayGroup(chatId,
+                    group.getId(),
+                    userStateManager.getBotMessageId(chatId),
+                    context.getMessage().getMessageId(),
+                    "Group created! Invite link: https://t.me/Tr1Count_bot?start=invite_" + group.getId());
         } catch (UserNotFoundException e) {
-            messageService.sendMessage(chatId, "Error creating group");
             userStateManager.setState(chatId, UserState.DEFAULT);
-            userInteractionService.startCommand(chatId, messageId);
+            userInteractionService.startCommand(chatId, messageId, "Error while creating group.");
         }
     }
 }

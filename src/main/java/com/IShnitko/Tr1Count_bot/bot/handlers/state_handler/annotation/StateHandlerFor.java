@@ -1,6 +1,6 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers.annotation;
+package com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation;
 
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

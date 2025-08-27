@@ -6,15 +6,16 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHand
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
-import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+
 @Component
-@StateHandlerFor(UserState.ONLY_RETURN_TO_GROUP)
+@StateHandlerFor(UserState.ONLY_RETURN_TO_MEMBERS_MENU)
 @RequiredArgsConstructor
-public class ReturnToGroupHandler implements StateHandler {
+public class ReturnToMembersMenuHandler implements StateHandler {
     private final UserStateManager userStateManager;
     private final GroupManagementService groupManagementService;
     private final MessageService messageService;
@@ -23,11 +24,12 @@ public class ReturnToGroupHandler implements StateHandler {
     public void handle(ChatContext context) throws Exception {
         String command = context.getText() != null ? context.getText() : context.getCallbackData();
         Long chatId = context.getChatId();
+        Integer messageId = context.getMessage().getMessageId();
         if (command.equals(Command.BACK_COMMAND.getCommand())) {
-            userStateManager.setState(chatId, UserState.IN_THE_GROUP);
-            groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId), context.getMessage().getMessageId());
+            userStateManager.setState(chatId, UserState.MEMBERS_MENU);
+            groupManagementService.viewMembersMenu(chatId, messageId, context.getUser().getId());
         } else {
-            messageService.deleteMessage(chatId, context.getMessage().getMessageId());
+            messageService.deleteMessage(chatId, messageId);
         }
     }
 }

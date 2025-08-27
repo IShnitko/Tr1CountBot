@@ -1,4 +1,4 @@
-package com.IShnitko.Tr1Count_bot.util.user_state;
+package com.IShnitko.Tr1Count_bot.bot.model;
 
 public enum UserState {
     DEFAULT,
@@ -13,4 +13,5 @@ public enum UserState {
     AWAITING_DATE,
     CONFIRMING_EXPENSE,
     ONLY_RETURN_TO_GROUP,
+    ONLY_RETURN_TO_MEMBERS_MENU,
 }
