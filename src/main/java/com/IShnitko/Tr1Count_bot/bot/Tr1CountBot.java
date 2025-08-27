@@ -1,10 +1,10 @@
 package com.IShnitko.Tr1Count_bot.bot;
 
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandlerFactory;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandlerFactory;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

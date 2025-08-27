@@ -1,7 +1,8 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers;
+package com.IShnitko.Tr1Count_bot.bot.handlers.state_handler;
 
-import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
+import com.IShnitko.Tr1Count_bot.bot.handlers.DefaultStateHandler;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.model.UserState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

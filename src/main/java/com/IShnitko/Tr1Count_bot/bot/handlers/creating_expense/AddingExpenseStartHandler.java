@@ -2,14 +2,14 @@ package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
-import com.IShnitko.Tr1Count_bot.bot.handlers.StateHandler;
-import com.IShnitko.Tr1Count_bot.bot.handlers.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
+import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

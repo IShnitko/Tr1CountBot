@@ -3,10 +3,7 @@ package com.IShnitko.Tr1Count_bot.bot;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
-import com.IShnitko.Tr1Count_bot.service.GroupService;
-import com.IShnitko.Tr1Count_bot.util.user_state.UserState;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
