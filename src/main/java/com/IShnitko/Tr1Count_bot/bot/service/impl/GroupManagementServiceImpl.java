@@ -3,8 +3,12 @@ package com.IShnitko.Tr1Count_bot.bot.service.impl;
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.model.User;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
+import com.IShnitko.Tr1Count_bot.service.impl.UserServiceImpl;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +17,14 @@ import java.util.Objects;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class GroupManagementServiceImpl implements GroupManagementService {
     private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
     private final MessageService messageService;
+    private final UserStateManager userStateManager;
+    private final UserServiceImpl userService;
 
-    public GroupManagementServiceImpl(GroupService groupService, KeyboardFactory keyboardFactory, MessageService messageService) {
-
-        this.groupService = groupService;
-        this.keyboardFactory = keyboardFactory;
-        this.messageService = messageService;
-    }
 
     @Override
     public void groupHelpCommand(Long chatId, Integer messageId) {
