@@ -93,4 +93,41 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                 keyboardFactory.returnButton());
     }
 
+    @Override
+    public void sendJoinLink(Long chatId, Integer messageId) {
+        String groupId = userStateManager.getChosenGroup(chatId);
+
+        String joinLink = String.format("https://t.me/Tr1Count_bot?start=invite_%s", groupId);
+        String message = "🔗 *Here is the link to share with your friends to join the group\\:* \n\n" +
+                joinLink;
+
+        messageService.editMessage(chatId, messageId, message, keyboardFactory.returnButton());
+
+    }
+
+    @Override
+    public void viewUserInfo(Long chatId, Integer messageId, Long userId) {
+        messageService.editMessage(chatId,
+                messageId,
+                userService.getUserInfoForGroup(userId,
+                        userStateManager.getChosenGroup(chatId)),
+                keyboardFactory.returnButton()
+                );
+    }
+
+    @Override
+    public void viewMembersMenu(Long chatId, Integer messageId, Long userId) {
+        String groupId = userStateManager.getChosenGroup(chatId);
+        try {
+            List<User> members = groupService.getUsersForGroup(groupId);
+            if (Objects.equals(userService.getCreatorOfTheGroup(groupId), userId)) {
+                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
+            } else {
+                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, false));
+            }
+            userStateManager.setState(chatId, UserState.MEMBERS_MENU);
+        } catch (Exception e) {
+            messageService.editMessage(chatId, messageId,"❌ Error retrieving members", keyboardFactory.returnButton());
+        }
+    }
 }
