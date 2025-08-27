@@ -14,12 +14,13 @@ import com.IShnitko.Tr1Count_bot.exception.UserAlreadyInGroupException;
 import com.IShnitko.Tr1Count_bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
-
+@Slf4j
 @Component
 @StateHandlerFor(UserState.DEFAULT)
 @RequiredArgsConstructor
