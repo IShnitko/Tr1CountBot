@@ -36,8 +36,6 @@ public class AwaitingGroupNameHandler implements StateHandler {
             userInteractionService.startCommand(context.getChatId(), context.getMessage().getMessageId());
         } else if (context.getText() != null) {
             handleInputGroupName(context, input);
-        } else {
-            userInteractionService.unknownCommand(context.getChatId());
         }
     }
 
@@ -47,13 +45,14 @@ public class AwaitingGroupNameHandler implements StateHandler {
         try {
             Group group = groupService.createGroup(groupName, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(chatId, UserState.IN_THE_GROUP, group.getId());
-            String text = "Group created! Invite link: https://t.me/Tr1Count_bot?start=invite_" + group.getId();
-//            messageService.sendMessage(chatId, text);
-            groupManagementService.displayGroup(chatId, group.getId(), messageId);
+            groupManagementService.displayGroup(chatId,
+                    group.getId(),
+                    userStateManager.getBotMessageId(chatId),
+                    context.getMessage().getMessageId(),
+                    "Group created! Invite link: https://t.me/Tr1Count_bot?start=invite_" + group.getId());
         } catch (UserNotFoundException e) {
-            messageService.sendMessage(chatId, "Error creating group");
             userStateManager.setState(chatId, UserState.DEFAULT);
-            userInteractionService.startCommand(chatId, messageId);
+            userInteractionService.startCommand(chatId, messageId, "Error while creating group.");
         }
     }
 }
