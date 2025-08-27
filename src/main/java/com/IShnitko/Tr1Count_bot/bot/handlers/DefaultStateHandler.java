@@ -116,7 +116,7 @@ public class DefaultStateHandler implements StateHandler {
         List<Group> groups = groupService.getGroupsForUser(context.getUser().getId());
         Long chatId = context.getChatId();
         if (groups.isEmpty()) {
-            messageService.sendMessage(chatId, "You're not in any groups yet!");
+            userInteractionService.startCommand(chatId, context.getMessage().getMessageId(), "You're not in any groups yet!");
         } else {
             messageService.editMessage(chatId, context.getMessage().getMessageId(), "Choose a group:", keyboardFactory.groupsListMenu(groups));
             userStateManager.setState(chatId, UserState.AWAITING_GROUP_ID);
