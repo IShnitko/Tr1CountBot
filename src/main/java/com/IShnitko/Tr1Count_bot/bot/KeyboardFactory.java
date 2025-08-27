@@ -93,6 +93,13 @@ public class KeyboardFactory {
 
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
+                .text("Delete group")
+                .callbackData(Command.DELETE.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
                 .text("Return to main menu")
                 .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
@@ -172,7 +179,7 @@ public class KeyboardFactory {
 
         return new InlineKeyboardMarkup(keyboard);
     }
-    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) { // TODO: if no button is pressed then no cross or checkmark is shown
+    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
