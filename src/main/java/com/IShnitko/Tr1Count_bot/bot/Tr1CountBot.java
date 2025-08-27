@@ -15,21 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 public class Tr1CountBot extends TelegramLongPollingBot {
-    private static final Logger LOG = LoggerFactory.getLogger(Tr1CountBot.class);
-
-    public static final String START = "/start";
-    public static final String HELP = "/help";
-    public static final String JOIN = "/join";
-    public static final String CREATE = "/create";
-    public static final String GROUPS = "/groups";
-    public static final String BALANCE = "/balance";
-    public static final String ADD_EXPENSE = "/add_expense";
-    public static final String MEMBERS = "/members";
-    public static final String BACK_COMMAND = "/back";
-    public static final String DELETE = "/delete";
-    public static final String HISTORY = "/history";
-    public static final String LINK = "/link";
-    public static final String INFO = "/info";
 
     private final UserService userService;
     private final UserStateManager userStateManager;
