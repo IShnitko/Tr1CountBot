@@ -51,21 +51,26 @@ public class MembersMenuHandler  implements StateHandler {
         Long userId = Long.valueOf(input.split("_")[1]);
         try {
             groupService.deleteUserFromGroup(groupCode, userId);
-//            messageService.sendMessage(context.getChatId(), "Successfully deleted group member"); // TODO: move this message somewhere
             userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
-            groupManagementService.displayGroup(context.getChatId(), groupCode, context.getMessage().getMessageId());
+            groupManagementService.displayGroup(context.getChatId(), groupCode, null, context.getMessage().getMessageId(), "Successfully deleted group member");
         } catch (UserNotFoundException e) {
-            messageService.sendMessage(context.getChatId(), "Error occurred while deleting this user, try again later!!");
+            groupManagementService.displayGroup(context.getChatId(),
+                    groupCode,
+                    null,
+                    context.getMessage().getMessageId(),
+                    "Error occurred while deleting this user, try again later!!");
         } catch (CreatorDeletionException e) {
-            messageService.sendMessage(context.getChatId(), "Can't delete creator of the group!");
+            groupManagementService.displayGroup(context.getChatId(),
+                    groupCode,
+                    null,
+                    context.getMessage().getMessageId(),
+                    "Can't delete creator of the group!");
         }
     }
 
-    private void getMemberInfo(ChatContext context, String groupCode, String input) {
+    private void getMemberInfo(ChatContext context, String input) {
         Long userId = Long.valueOf(input.split("_")[1]);
-        messageService.sendMessage(context.getChatId(),
-                userService.getUserInfoForGroup(userId, groupCode));
-        userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
+        groupManagementService.viewUserInfo(context.getChatId(), context.getMessage().getMessageId(), userId);
         userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_MEMBERS_MENU);
     }
 
