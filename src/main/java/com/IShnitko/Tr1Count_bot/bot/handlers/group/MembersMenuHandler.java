@@ -67,6 +67,7 @@ public class MembersMenuHandler  implements StateHandler {
         messageService.sendMessage(context.getChatId(),
                 userService.getUserInfoForGroup(userId, groupCode));
         userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
+        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_MEMBERS_MENU);
     }
 
     private void returnToGroup(ChatContext context, String groupCode) {
