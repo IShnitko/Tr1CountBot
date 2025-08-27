@@ -57,6 +57,22 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     }
 
     @Override
+    public void displayGroup(Long chatId, String groupCode, Integer botMessageId, Integer inputMessageId, String additionalText) {
+        if (botMessageId == null) {
+            messageService.editMessage(chatId,
+                    inputMessageId,
+                    additionalText + "\n\nThis is your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        } else {
+            messageService.deleteMessage(chatId, inputMessageId);
+            messageService.editMessage(chatId,
+                    botMessageId,
+                    additionalText + "\n\nThis is your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
+        }
+    }
+
+    @Override
     public void displayGroup(Long chatId, String groupCode, Integer botMessageId) {
         if (botMessageId == null)
             messageService.sendMessage(chatId, "Welcome to your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",

@@ -31,6 +31,14 @@ public class UserInteractionServiceImpl implements UserInteractionService {
     }
 
     @Override
+    public void startCommand(Long chatId, Integer messageId, String additionalText) {
+        messageService.editMessage(chatId,
+                messageId,
+                additionalText + "\n\nThis is TriCount bot!\nChoose an option:",
+                keyboardFactory.mainMenu());
+    }
+
+    @Override
     public void helpCommand(Long chatId) {
         String text = "Bot description:\n\n...";
         messageService.sendMessage(chatId, text);
