@@ -4,17 +4,17 @@ import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
-import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.util.TelegramApiUtils;
-import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,9 +24,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Objects;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 
 @Component
 @StateHandlerFor(UserState.IN_THE_GROUP)
@@ -58,7 +55,8 @@ public class InGroupStateHandler implements StateHandler {
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
 
-        switch (command) { // TODO: add Invitation link and expense history
+        Command command = Command.fromString(context.getCallbackData());
+        switch (command) {
             case BALANCE -> handleBalance(context, groupId);
             case ADD_EXPENSE -> handleAddExpense(context); // TODO: maybe change taking context to just taking params
             case MEMBERS -> handleMembers(context, groupId);

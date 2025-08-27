@@ -3,6 +3,7 @@ package com.IShnitko.Tr1Count_bot.bot.handlers.group;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
@@ -10,12 +11,10 @@ import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.exception.CreatorDeletionException;
 import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
-import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.*;
 
 @Component
 @StateHandlerFor(UserState.MEMBERS_MENU)
@@ -39,7 +38,7 @@ public class MembersMenuHandler  implements StateHandler {
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
-        String command = input.split("_")[0];
+        Command command = Command.fromString(input.split("_")[0]);
         String groupCode = userStateManager.getChosenGroup(context.getChatId());
         switch (command) {
             case INFO -> getMemberInfo(context, groupCode, input);

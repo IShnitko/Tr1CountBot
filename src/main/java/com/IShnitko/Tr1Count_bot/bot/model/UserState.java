@@ -1,4 +1,4 @@
-package com.IShnitko.Tr1Count_bot.model;
+package com.IShnitko.Tr1Count_bot.bot.model;
 
 public enum UserState {
     DEFAULT,

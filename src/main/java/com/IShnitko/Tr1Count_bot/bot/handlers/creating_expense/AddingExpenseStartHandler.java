@@ -4,11 +4,12 @@ import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,8 +20,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.IShnitko.Tr1Count_bot.bot.Tr1CountBot.BACK_COMMAND;
 
 @Component
 @StateHandlerFor(UserState.ADDING_EXPENSE_START)
@@ -46,7 +45,7 @@ public class AddingExpenseStartHandler implements StateHandler {
             return;
         }
 
-        if(input.equals(BACK_COMMAND)) {
+        if(input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);
             messageService.deleteMessage(chatId, messageId);

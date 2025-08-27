@@ -11,7 +11,8 @@ import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.exception.UserAlreadyInGroupException;
-import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,7 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleStart(ChatContext context, String input) {
-        if (input.startsWith(START + " invite_")) {
+        if (input.startsWith(Command.START.getCommand() + " invite_")) {
             handleInvitation(context, input);
         } else {
             userInteractionService.startCommand(context.getChatId(), null);
@@ -63,7 +64,7 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleInvitation(ChatContext context, String input) {
-        String groupId = input.substring((START + " invite_").length());
+        String groupId = input.substring((Command.START.getCommand() + " invite_").length());
         try {
             groupService.joinGroupById(groupId, context.getUser().getId());
             userStateManager.setStateWithChosenGroup(context.getChatId(), UserState.IN_THE_GROUP, groupId);
@@ -76,8 +77,8 @@ public class DefaultStateHandler implements StateHandler {
     }
 
     private void handleJoin(ChatContext context, String input) {
-        if (context.getUpdateType() == ChatContext.UpdateType.MESSAGE && input.length() > JOIN.length()) {
-            String groupCode = input.substring(JOIN.length()).trim();
+        if (context.getUpdateType() == ChatContext.UpdateType.MESSAGE && input.length() > Command.JOIN.getCommand().length()) {
+            String groupCode = input.substring(Command.JOIN.getCommand().length()).trim();
             joinGroup(context, groupCode);
         } else {
             userStateManager.setBotMessageId(context.getChatId(),

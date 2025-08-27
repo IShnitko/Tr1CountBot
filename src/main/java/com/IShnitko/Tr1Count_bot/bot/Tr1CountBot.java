@@ -41,12 +41,12 @@ public class Tr1CountBot extends TelegramLongPollingBot {
 
             String text = context.getText() != null ? context.getText() : context.getCallbackData();
 
-            LOG.info("Processing {} ({}) from {} in state: {}",
+            log.info("Processing {} ({}) from {} in state: {}",
                     context.getUpdateType(), text, context.getChatId(), state);
 
             stateHandlerFactory.getHandler(state).handle(context);
         } catch (Exception e) {
-            LOG.error("Error processing update", e);
+            log.error("Error processing update", e);
         }
     }
 

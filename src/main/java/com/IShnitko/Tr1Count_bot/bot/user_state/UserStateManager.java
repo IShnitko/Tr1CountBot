@@ -1,7 +1,7 @@
 package com.IShnitko.Tr1Count_bot.bot.user_state;
 
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-import com.IShnitko.Tr1Count_bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
