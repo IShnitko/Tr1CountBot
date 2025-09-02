@@ -39,9 +39,12 @@ public class UserInteractionServiceImpl implements UserInteractionService {
     }
 
     @Override
-    public void helpCommand(Long chatId) {
+    public void helpCommand(Long chatId, Integer messageId) {
         String text = "Bot description:\n\n...";
-        messageService.sendMessage(chatId, text);
+        messageService.editMessage(chatId,
+                messageId,
+                text,
+                keyboardFactory.returnButton());
     }
 
     @Override

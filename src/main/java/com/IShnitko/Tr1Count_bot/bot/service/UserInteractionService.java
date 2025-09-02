@@ -5,7 +5,7 @@ public interface UserInteractionService {
 
     void startCommand(Long chatId, Integer messageId, String additionalText);
 
-    void helpCommand(Long chatId);
+    void helpCommand(Long chatId, Integer messageId);
 
     void unknownCommand(Long chatId);
 
