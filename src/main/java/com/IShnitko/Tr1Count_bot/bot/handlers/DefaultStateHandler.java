@@ -41,7 +41,7 @@ public class DefaultStateHandler implements StateHandler {
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
-        assert input != null;
+
         Command command = Command.fromString(input.split(" ")[0]);
         if (context.getUpdateType() != ChatContext.UpdateType.CALLBACK && !Objects.equals(command, Command.START)) {
             messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
@@ -54,7 +54,9 @@ public class DefaultStateHandler implements StateHandler {
             case JOIN -> handleJoin(context, input);
             case CREATE -> handleCreate(context);
             case GROUPS -> chooseGroup(context);
-            default -> userInteractionService.unknownCommand(context.getChatId());
+            default -> {
+                messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId()); // basically deletes any user input if it is not a button
+            }
         }
     }
 
