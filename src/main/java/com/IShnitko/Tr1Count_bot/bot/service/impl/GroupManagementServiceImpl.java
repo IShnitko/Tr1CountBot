@@ -4,11 +4,13 @@ import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.impl.UserServiceImpl;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -85,12 +87,19 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     }
 
     @Override
-    public void sendIncorrectGroupId(Long chatId, Integer messageId) { // TODO: this throws TelegramApiRequestException, idk how to fix it
+    public void sendIncorrectGroupId(Long chatId, Integer messageId, @NonNull Long userId) {
         messageService.deleteMessage(chatId, messageId);
-        messageService.editMessage(chatId,
-                userStateManager.getBotMessageId(chatId),
-                "Incorrect group Id. Try again:",
-                keyboardFactory.returnButton());
+        List<Group> groups = groupService.getGroupsForUser(userId);
+        Integer botMessageId = userStateManager.getBotMessageId(chatId);
+
+        String messageText;
+        if (!groups.isEmpty()) {
+            messageText = "Incorrect group ID. Try again or choose a group below:";
+            messageService.editMessage(chatId, botMessageId, messageText, keyboardFactory.groupsListMenu(groups));
+        } else {
+            messageText = "Incorrect group ID. Try again:";
+            messageService.editMessage(chatId, botMessageId, messageText, keyboardFactory.returnButton());
+        }
     }
 
     @Override
@@ -112,7 +121,7 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                 userService.getUserInfoForGroup(userId,
                         userStateManager.getChosenGroup(chatId)),
                 keyboardFactory.returnButton()
-                );
+        );
     }
 
     @Override
