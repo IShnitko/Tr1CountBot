@@ -50,7 +50,7 @@ public class DefaultStateHandler implements StateHandler {
         log.info("Default Handler got command {}", command.getCommand());
         switch (command) {
             case START -> handleStart(context, input);
-            case HELP -> userInteractionService.helpCommand(context.getChatId());
+            case HELP -> handleHelp(context);
             case JOIN -> handleJoin(context, input);
             case CREATE -> handleCreate(context);
             case GROUPS -> chooseGroup(context);
@@ -64,6 +64,11 @@ public class DefaultStateHandler implements StateHandler {
         } else {
             userInteractionService.startCommand(context.getChatId(), null);
         }
+    }
+
+    private void handleHelp(ChatContext context) {
+        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_START);
+        userInteractionService.helpCommand(context.getChatId(), context.getMessage().getMessageId());
     }
 
     private void handleInvitation(ChatContext context, String input) {
