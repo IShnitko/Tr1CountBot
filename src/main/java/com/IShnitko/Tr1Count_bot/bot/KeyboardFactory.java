@@ -120,6 +120,12 @@ public class KeyboardFactory {
                     .build());
             rows.add(row);
         }
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Return to main menu")
+                .callbackData(Command.BACK_COMMAND.getCommand())
+                .build());
+        rows.add(row);
         inlineKeyboard.setKeyboard(rows);
 
         return inlineKeyboard;
