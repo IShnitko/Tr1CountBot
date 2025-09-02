@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Component
 @Slf4j
@@ -45,6 +47,18 @@ public class Tr1CountBot extends TelegramLongPollingBot {
                     context.getUpdateType(), text, context.getChatId(), state);
 
             stateHandlerFactory.getHandler(state).handle(context);
+        } catch (IllegalArgumentException e) {
+            try {
+                execute(
+                        DeleteMessage.builder()
+                                .chatId(update.getMessage().getChatId().toString())
+                                .messageId(update.getMessage().getMessageId())
+                                .build()
+                );
+            } catch (TelegramApiException ex) {
+                log.error("Error while deleting message of incorrect type");
+                throw new RuntimeException(ex);
+            }
         } catch (Exception e) {
             log.error("Error processing update", e);
         }
