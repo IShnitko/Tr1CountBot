@@ -65,6 +65,11 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                     inputMessageId,
                     additionalText + "\n\nThis is your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
                     keyboardFactory.groupMenu());
+        } else if (inputMessageId == null) {
+            messageService.editMessage(chatId,
+                    botMessageId,
+                    additionalText + "\n\nThis is your group " + groupService.getGroupName(groupCode) + "!\nChoose an option:",
+                    keyboardFactory.groupMenu());
         } else {
             messageService.deleteMessage(chatId, inputMessageId);
             messageService.editMessage(chatId,
