@@ -5,6 +5,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
+import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
@@ -24,87 +25,46 @@ import java.time.format.DateTimeParseException;
 public class AwaitingDateHandler implements StateHandler {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
 
-    private final MessageService messageService;
     private final UserStateManager userStateManager;
-    private final GroupManagementService groupManagementService;
-    private final KeyboardFactory keyboardFactory;
-    private final GroupService groupService;
+    private final AddingExpenseService addingExpenseService;
 
     @Override
     public void handle(ChatContext context) throws Exception {
-        String input = context.getText() != null ? context.getText() : context.getCallbackData(); // TODO: this handler can also get query not text input (like button today doesn;t work)
+        String input = context.getText() != null ? context.getText() : context.getCallbackData();
         Long chatId = context.getChatId();
 
         Integer messageId = context.getMessage().getMessageId();
-        messageService.deleteMessage(chatId, messageId);
 
         if (input == null) {
-            messageService.sendMessage(chatId, "❌ Invalid input. Please send the date in format `dd.mm.yy` or type `today`.", keyboardFactory.returnButton());
+            addingExpenseService.sendInvalidDateInput(chatId, messageId);
             return;
         }
 
         if (input.equalsIgnoreCase(Command.BACK_COMMAND.getCommand())) {
-            handleReturn(chatId);
+            userStateManager.clearExpenseDto(chatId);
+            userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
+            addingExpenseService.startAddingExpense(chatId, messageId);
             return;
         }
 
         // Handle "today" command
         if (input.equalsIgnoreCase(Command.DEFAULT_DATE_COMMAND.getCommand())) {
-            handleDateSelection(chatId, messageId, LocalDate.now());
+            userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
+            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
+            expenseDto.setDate(LocalDate.now().atStartOfDay());
+            addingExpenseService.sendPaidBy(chatId, null);
             return;
         }
 
         // Try to parse the date from user input
         try {
             LocalDate expenseDate = LocalDate.parse(input, DATE_FORMATTER);
-            handleDateSelection(chatId, messageId, expenseDate);
+            userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
+            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
+            expenseDto.setDate(expenseDate.atStartOfDay());
+            addingExpenseService.sendPaidBy(chatId, messageId);
         } catch (DateTimeParseException e) {
-            // If parsing fails, inform the user and keep the current state
-            // TODO: add return button
-            messageService.deleteMessage(chatId, messageId);
-            messageService.sendMessage(chatId, "❌ Invalid date format. Please use `dd.mm.yy`, for example: `25.10.24` or type `today`.");
+           addingExpenseService.sendInvalidDateInput(chatId, messageId);
         }
-    }
-
-    /**
-     * Handles the date selection, updates the DTO, and moves to the next state.
-     *
-     * @param chatId      The chat ID of the user.
-     * @param messageId
-     * @param expenseDate The parsed LocalDate object.
-     */
-    private void handleDateSelection(Long chatId, Integer messageId, LocalDate expenseDate) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-        expenseDto.setDate(expenseDate.atStartOfDay());
-
-        userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
-        messageService.deleteMessage(chatId, messageId);
-        messageService.sendMessage(chatId, "Choose who paid for this purchase:", keyboardFactory.membersMenu(
-                groupService.getUsersForGroup(
-                        userStateManager.getChosenGroup(chatId)
-                ), false));
-    }
-
-    /**
-     * Clears the user's session and cancels the expense creation process.
-     *
-     * @param chatId    The chat ID of the user.
-     */
-    private void handleReturn(Long chatId) {
-        userStateManager.clearExpenseDto(chatId);
-        String instructions = """
-                💸 *Add New Expense* [ADDING_EXPENSE_START]
-                                
-                Please send expense details in format:
-                `<description> <amount>`
-                                
-                Example:
-                `Dinner 25.50`
-                """;
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-        expenseDto.setMessageId(
-                messageService.sendMessage(chatId, instructions, keyboardFactory.returnButton())
-        );
-        userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
     }
 }

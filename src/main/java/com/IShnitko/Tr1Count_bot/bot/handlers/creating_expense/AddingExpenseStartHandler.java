@@ -1,16 +1,15 @@
 package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
 
-import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
+import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
-import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
-import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +27,11 @@ public class AddingExpenseStartHandler implements StateHandler {
     private static final Logger LOG = LoggerFactory.getLogger(AddingExpenseStartHandler.class);
 
     private static final Pattern EXPENSE_PATTERN = Pattern.compile("^(.+)\\s+([0-9]+\\.?[0-9]*)$");
+
     private final UserInteractionServiceImpl userInteractionService;
     private final UserStateManager userStateManager;
-    private final KeyboardFactory keyboardFactory;
-    private final MessageServiceImpl messageService;
     private final GroupManagementService groupManagementService;
+    private final AddingExpenseService addingExpenseService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -48,45 +47,24 @@ public class AddingExpenseStartHandler implements StateHandler {
         if(input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);
-            messageService.deleteMessage(chatId, messageId);
             groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId), context.getMessage().getMessageId());
             return;
         }
 
         Matcher matcher = EXPENSE_PATTERN.matcher(input);
+        LOG.info("Matcher: " + matcher.matches());
 
-        messageService.deleteMessage(chatId, messageId);
-        LOG.info("Matcher: " +matcher.matches());
         if (matcher.matches()) {
             String title = matcher.group(1).trim();
             BigDecimal amount = new BigDecimal(matcher.group(2));
-
             CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
 
             expenseDto.setTitle(title);
             expenseDto.setAmount(amount);
-
+            addingExpenseService.sendDateInput(chatId, messageId);
             userStateManager.setState(chatId, UserState.AWAITING_DATE);
-            if (expenseDto.getMessageId() != null) {
-                messageService.deleteMessage(chatId, expenseDto.getMessageId());
-            }
-            messageService.sendMessage(chatId, "Input date", keyboardFactory.dateButton());
         } else {
-            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-
-            // Here we edit the original message instead of deleting and sending a new one
-            // This prevents a "flash" and keeps the flow smoother.
-            if (expenseDto.getMessageId() != null) {
-                messageService.editMessage(
-                        chatId,
-                        expenseDto.getMessageId(),
-                        "❌ Invalid format. Please send in format: `<description> <amount>`.",
-                        keyboardFactory.returnButton()
-                );
-            } else {
-                // As a fallback, send a new message
-                messageService.sendMessage(chatId, "❌ Invalid format. Please send in format: `<description> <amount>`.", keyboardFactory.returnButton());
-            }
+            addingExpenseService.sendInvalidStartAddingExpense(chatId, messageId);
         }
     }
 }

@@ -5,6 +5,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
+import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
@@ -17,6 +18,7 @@ import com.IShnitko.Tr1Count_bot.util.TelegramApiUtils;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
+@Slf4j
 @StateHandlerFor(UserState.IN_THE_GROUP)
 @RequiredArgsConstructor
 public class InGroupStateHandler implements StateHandler {
@@ -40,6 +43,7 @@ public class InGroupStateHandler implements StateHandler {
     private final KeyboardFactory keyboardFactory;
     private final GroupService groupService;
     private final UserService userService;
+    private final AddingExpenseService addingExpenseService;
 
 
     @Override
@@ -69,7 +73,7 @@ public class InGroupStateHandler implements StateHandler {
             case BACK_COMMAND -> handleBackToMain(context);
             case HISTORY -> showHistory(context, groupId);
             case LINK -> sendJoinLink(context);
-            case DELETE -> handleDelete(context);
+            case DELETE -> handleDelete(context); // TODO: add conformation page before deleting
             default -> userInteractionService.unknownCommand(context.getChatId());
         }
     }
@@ -160,27 +164,16 @@ public class InGroupStateHandler implements StateHandler {
     private void handleAddExpense(ChatContext context) {
         Integer messageId = context.getMessage().getMessageId();
         Long chatId = context.getChatId();
-
         try {
-            // Переводим в состояние добавления расхода
             userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
-            CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-            // Отправляем инструкцию
-            String instructions = """
-                💸 *Add New Expense*
-                               \s
-                Please send expense details in format:
-                `<description> <amount>`
-                               \s
-                Example:
-                `Dinner 25.50`
-               \s""";
-            messageService.deleteMessage(chatId, messageId);
-            Integer sentMessageId = messageService.sendMessage(chatId, instructions, keyboardFactory.returnButton());
-            expenseDto.setMessageId(sentMessageId);
+            addingExpenseService.startAddingExpense(chatId, messageId);
         } catch (Exception e) {
-            messageService.deleteMessage(chatId, messageId);
-            messageService.sendMessage(chatId, "❌ Error starting expense creation"); // TODO: fix the editing of the message (now it breaks chat)
+            log.error("Error while starting creating expense", e);
+            groupManagementService.displayGroup(chatId,
+                    userStateManager.getChosenGroup(chatId),
+                    messageId,
+                    null,
+                    "❌ Error starting expense creation");
         }
     }
 
