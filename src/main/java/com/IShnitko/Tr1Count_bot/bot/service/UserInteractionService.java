@@ -7,6 +7,4 @@ public interface UserInteractionService {
 
     void helpCommand(Long chatId, Integer messageId);
 
-    void unknownCommand(Long chatId);
-
 }

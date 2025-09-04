@@ -39,11 +39,7 @@ public class AddingExpenseStartHandler implements StateHandler {
         Long chatId = context.getChatId();
         Integer messageId = context.getMessage().getMessageId();
 
-        if (input == null) {
-            userInteractionService.unknownCommand(chatId);
-            return;
-        }
-
+        assert input != null;
         if(input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);

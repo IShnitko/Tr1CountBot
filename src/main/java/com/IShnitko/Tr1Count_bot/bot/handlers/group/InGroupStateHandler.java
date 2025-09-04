@@ -74,7 +74,6 @@ public class InGroupStateHandler implements StateHandler {
             case HISTORY -> showHistory(context, groupId);
             case LINK -> sendJoinLink(context);
             case DELETE -> handleDelete(context); // TODO: add conformation page before deleting
-            default -> userInteractionService.unknownCommand(context.getChatId());
         }
     }
 

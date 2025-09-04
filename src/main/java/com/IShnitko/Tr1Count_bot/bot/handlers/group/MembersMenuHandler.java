@@ -21,20 +21,15 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MembersMenuHandler  implements StateHandler {
 
-    private final UserInteractionServiceImpl userInteractionService;
     private final MessageServiceImpl messageService;
     private final UserStateManager userStateManager;
     private final GroupService groupService;
     private final GroupManagementService groupManagementService;
-    private final UserService userService;
 
     @Override
     public void handle(ChatContext context) throws Exception {
-        String input = context.getText() != null ? context.getText() : context.getCallbackData();
-        if (input == null) {
-            userInteractionService.unknownCommand(context.getChatId());
-            return;
-        }
+        String input = context.getCallbackData();
+
         if (context.getCallbackQueryId() != null) { // SAFETY CHECK
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
@@ -44,6 +39,7 @@ public class MembersMenuHandler  implements StateHandler {
             case INFO -> getMemberInfo(context, input);
             case DELETE -> deleteMember(context, groupCode, input);
             case BACK_COMMAND -> returnToGroup(context, groupCode);
+            default -> messageService.deleteMessage(context.getChatId(), context.getMessage().getMessageId());
         }
     }
 

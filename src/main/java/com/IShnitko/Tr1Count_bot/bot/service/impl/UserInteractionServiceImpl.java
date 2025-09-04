@@ -63,9 +63,4 @@ public class UserInteractionServiceImpl implements UserInteractionService {
                 keyboardFactory.returnButton());
     }
 
-    @Override
-    public void unknownCommand(Long chatId) {
-        messageService.sendMessage(chatId, "Unknown command.");
-    }
-
 }
