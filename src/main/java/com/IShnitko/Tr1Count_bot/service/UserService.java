@@ -1,10 +1,12 @@
 package com.IShnitko.Tr1Count_bot.service;
 
-import org.telegram.telegrambots.meta.api.objects.User;
+import com.IShnitko.Tr1Count_bot.model.User;
 
 public interface UserService {
-    void findOrCreateUser(User telegramId);
+    User findOrCreateUser(org.telegram.telegrambots.meta.api.objects.User telegramId);
+
     String getUserInfoForGroup(Long telegramId, String groupId);
+
     String getUserNameById(Long telegramId);
 
     Long getCreatorOfTheGroup(String groupId);
