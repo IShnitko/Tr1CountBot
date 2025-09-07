@@ -50,12 +50,14 @@ public class MembersMenuHandler  implements StateHandler {
             userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
             groupManagementService.displayGroup(context.getChatId(), groupCode, null, context.getMessage().getMessageId(), "Successfully deleted group member");
         } catch (UserNotFoundException e) {
+            userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
             groupManagementService.displayGroup(context.getChatId(),
                     groupCode,
                     null,
                     context.getMessage().getMessageId(),
                     "Error occurred while deleting this user, try again later!!");
         } catch (CreatorDeletionException e) {
+            userStateManager.setState(context.getChatId(), UserState.IN_THE_GROUP);
             groupManagementService.displayGroup(context.getChatId(),
                     groupCode,
                     null,
