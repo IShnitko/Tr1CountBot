@@ -3,14 +3,13 @@ services:
     image: postgres:15-alpine
     container_name: tricount_db
     env_file:
-      - .env  # Загружаем переменные из .env файла
+      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./dbScripts:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     healthcheck:
@@ -19,16 +18,26 @@ services:
       timeout: 5s
       retries: 10
 
+  flyway:
+    image: flyway/flyway:10
+    container_name: tricount_flyway
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./db/migration:/flyway/sql   # place for migrations
+    command: -url=jdbc:postgresql://db:5432/${POSTGRES_DB} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} -schemas=tricount_schema migrate
+
   app:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: tricount_app
     depends_on:
-      db:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     env_file:
-      - .env  # Загружаем переменные из .env файла
+      - .env
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
