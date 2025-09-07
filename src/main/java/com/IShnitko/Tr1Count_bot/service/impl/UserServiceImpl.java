@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -27,54 +28,93 @@ public class UserServiceImpl implements UserService {
         this.groupMembershipRepository = groupMembershipRepository;
     }
 
-    @Override
-    public void findOrCreateUser(org.telegram.telegrambots.meta.api.objects.User telegramUser) {
+    /**
+     * Finds an existing user by their Telegram ID or creates a new one.
+     * If the user exists, the method updates their name and username if they have changed.
+     *
+     * @param telegramUser The user object from Telegram.
+     * @return The found or created user object.
+     */
+    public User findOrCreateUser(org.telegram.telegrambots.meta.api.objects.User telegramUser) {
         Long telegramId = telegramUser.getId();
         Optional<User> existingUser = userRepository.findUserByTelegramId(telegramId);
 
-        if (existingUser.isEmpty()) {
+        // If the user already exists, update their data if it has changed.
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            boolean needsUpdate = false;
+
+            // Compare name
+            if (!Objects.equals(user.getName(), telegramUser.getFirstName())) {
+                user.setName(telegramUser.getFirstName());
+                needsUpdate = true;
+            }
+
+            // Compare username. It's important to use Objects.equals for comparison,
+            // to avoid a NullPointerException if one of the usernames is null.
+            if (!Objects.equals(user.getUsername(), telegramUser.getUserName())) {
+                user.setUsername(telegramUser.getUserName());
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                userRepository.save(user);
+                LOG.info("User with Telegram ID {} has been updated with new name '{}' and username '{}'.",
+                        telegramId, user.getName(), user.getUsername());
+            }
+
+            return user;
+        } else {
+            // If the user doesn't exist, create a new one.
             User newUser = new User();
             newUser.setTelegramId(telegramId);
             newUser.setName(telegramUser.getFirstName());
-            userRepository.save(newUser);
-            LOG.info("New user with Telegram ID {} and name '{}' has been created.", telegramId, telegramUser.getFirstName());
+            newUser.setUsername(telegramUser.getUserName());
+            User savedUser = userRepository.save(newUser);
+            LOG.info("New user with Telegram ID {}, username {} and name '{}' has been created.",
+                    telegramId, savedUser.getUsername(), savedUser.getName());
+            return savedUser;
         }
     }
-
     @Override
     public String getUserInfoForGroup(Long telegramId, String groupId) {
-        // Форматтер для красивого отображения даты
+        // Formatter for a clean date display
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
-        // Получаем пользователя по его telegramId
-        Optional<User> userOptional = userRepository.findByTelegramId(telegramId);
+        // Get the user by their telegramId
+        Optional<User> userOptional = userRepository.findUserByTelegramId(telegramId);
 
-        // Получаем информацию о членстве пользователя в конкретной группе
-        List<GroupMembership> membershipOptional = groupMembershipRepository.findGroupMembershipByUser_TelegramIdAndGroup_Id(telegramId, groupId);
+        // Get the user's group membership information
+        List<GroupMembership> membershipList = groupMembershipRepository.findGroupMembershipByUser_TelegramIdAndGroup_Id(telegramId, groupId);
 
-        // Проверяем, что и пользователь, и членство в группе существуют
-        if (userOptional.isEmpty() || membershipOptional.isEmpty()) {
-            return "Не удалось найти информацию о пользователе или его членстве в группе.";
+        // Check if both the user and their group membership exist
+        if (userOptional.isEmpty() || membershipList.isEmpty()) {
+            return "Failed to find information about the user or their group membership.";
         }
 
         User user = userOptional.get();
-        GroupMembership membership = membershipOptional.getFirst();
+        GroupMembership membership = membershipList.getFirst();
 
-        String userLink = String.format("tg://user?id=%d", telegramId);
+        // Check if a username exists to create a proper link
+        String userDisplayName;
 
-        // Формируем итоговую строку с использованием Markdown-разметки
-        // Важно: для MarkdownV2 необходимо экранировать специальные символы
-        // в тексте, которые могут сломать разметку, например, в имени пользователя.
-        String escapedName = escapeMarkdownV2(user.getName());
+        if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            // If a username exists, use it as a display name
+            userDisplayName = "@" + user.getUsername();
+        } else {
+            // If there's no username, use the user's name
+            userDisplayName = user.getName();
+        }
 
+        // Return a plain text string without any Markdown
         return String.format(
-                "*Info about user:*\n" +
-                        "👤 *Name:* %s\n" +
-                        "📅 *Joined:* %s\n" +
-                        "🔗 [Contact user]( %s )", // TODO: idk why this link works only on mobile, idk how to get username here
-                escapedName,
+                "User Information:\n" +
+                        "Name: %s\n" +
+                        "Joined: %s\n" +
+                        "Contact: %s",
+                user.getName(),
                 membership.getJoinedAt().format(formatter),
-                userLink
+                userDisplayName
         );
     }
 
