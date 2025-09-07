@@ -14,18 +14,18 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
-    @ManyToOne
-    @JoinColumn(name = "paid_by_user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paid_by_user_id", nullable = false)
     private User paidBy;
 
-    @Column(name = "title", precision = 10, scale = 2)
+    @Column(name = "title", nullable = false, length = 200)
     private String title;
 
-    @Column(name = "amount")
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "date")

@@ -13,14 +13,15 @@ public class GroupMembership {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id") // maybe in some future add so that it is possible to create custom names of users for each group
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;
 }
+

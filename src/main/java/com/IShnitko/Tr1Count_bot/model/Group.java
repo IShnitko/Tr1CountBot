@@ -11,26 +11,22 @@ import java.util.List;
 @Table(name = "groups", schema = "tricount_schema")
 public class Group {
     @Id
-    @Column(name = "id")
+    @Column(name = "id", length = 10)
     private String id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false, length = 200)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id")
+    @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "group",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<GroupMembership> members;
 
-    @OneToMany(mappedBy = "group",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<Expense> groupExpenses;
 }

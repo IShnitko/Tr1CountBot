@@ -13,26 +13,21 @@ public class User {
     @Column(name = "telegram_id")
     private Long telegramId;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "createdBy",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @Column(name = "username", length = 100)
+    private String username;
+
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     private List<Group> createdGroups;
 
-    @OneToMany(mappedBy = "user",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<GroupMembership> memberships;
 
-    @OneToMany(mappedBy = "paidBy",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "paidBy", fetch = FetchType.LAZY)
     private List<Expense> personalExpenses;
 
-    @OneToMany(mappedBy = "user",
-            cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.DETACH},
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<ExpenseShare> expenseShares;
 }
