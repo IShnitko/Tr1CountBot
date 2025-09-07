@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DiffGenerationConfig">
+    <option name="snapshotDb" value="false" />
+    <option name="snapshotDbValue" value="dde5784c-0772-4120-82b1-27198cac16ee" />
+    <option name="snapshotModelValue" value="Tr1Count_bot:Tr1Count_bot" />
+    <option name="sourceModelValue" value="Tr1Count_bot:Tr1Count_bot" />
+    <option name="targetDbValue" value="dde5784c-0772-4120-82b1-27198cac16ee__tricount_tricount_schema" />
+  </component>
+</project>
