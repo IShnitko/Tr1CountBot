@@ -1,5 +1,8 @@
 package com.IShnitko.Tr1Count_bot.bot.model;
 
+import lombok.Getter;
+
+@Getter
 public enum Command {
     START("/start"),
     HELP("/help"),
@@ -22,10 +25,6 @@ public enum Command {
 
     Command(String command) {
         this.command = command;
-    }
-
-    public String getCommand() {
-        return command;
     }
 
     /**

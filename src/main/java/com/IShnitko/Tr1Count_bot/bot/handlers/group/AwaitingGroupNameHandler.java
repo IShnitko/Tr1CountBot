@@ -5,7 +5,6 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
-import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
@@ -22,7 +21,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AwaitingGroupNameHandler implements StateHandler {
     private final UserInteractionService userInteractionService;
-    private final MessageService messageService;
     private final GroupService groupService;
     private final UserStateManager userStateManager;
     private final GroupManagementService groupManagementService;

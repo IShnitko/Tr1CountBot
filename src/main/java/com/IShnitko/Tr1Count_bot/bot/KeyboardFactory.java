@@ -185,6 +185,7 @@ public class KeyboardFactory {
 
         return new InlineKeyboardMarkup(keyboard);
     }
+
     public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();

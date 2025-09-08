@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public class ChatContext {
-    public enum UpdateType { MESSAGE, CALLBACK }
+    public enum UpdateType {MESSAGE, CALLBACK}
 
     @Getter
     private final Long chatId;
@@ -27,7 +27,7 @@ public class ChatContext {
     private final AbsSender bot;
     @Nullable
     @Getter
-    private final String callbackQueryId; // NEW FIELD
+    private final String callbackQueryId;
 
     public ChatContext(Update update, AbsSender bot) {
         this.bot = bot;
@@ -56,8 +56,12 @@ public class ChatContext {
     }
 
     @Nullable
-    public String getText() { return text; }
+    public String getText() {
+        return text;
+    }
 
     @Nullable
-    public String getCallbackData() { return callbackData; }
+    public String getCallbackData() {
+        return callbackData;
+    }
 }

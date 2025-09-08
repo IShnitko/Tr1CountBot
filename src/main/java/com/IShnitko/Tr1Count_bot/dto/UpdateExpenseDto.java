@@ -13,4 +13,5 @@ public record UpdateExpenseDto(
         Optional<String> title,
         Optional<BigDecimal> amount,
         Optional<LocalDateTime> date
-) {}
+) {
+}

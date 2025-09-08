@@ -84,7 +84,7 @@ public class AddingExpenseServiceImpl implements AddingExpenseService {
                         groupService.getUsersForGroup(
                                 userStateManager.getChosenGroup(chatId)
                         ), false)
-                );
+        );
     }
 
     @Override

@@ -9,7 +9,6 @@ import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
-import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
@@ -67,8 +66,8 @@ public class InGroupStateHandler implements StateHandler {
         Command command = Command.fromString(context.getCallbackData());
         switch (command) {
             case BALANCE -> handleBalance(context, groupId);
-            case ADD_EXPENSE -> handleAddExpense(context);
-            case MEMBERS -> handleMembers(context);
+            case ADD_EXPENSE -> handleAddExpense(context); // TODO: add edit and delete expense
+            case MEMBERS -> handleMembers(context); // TODO: add update group name
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
             case HISTORY -> showHistory(context, groupId);
@@ -81,11 +80,11 @@ public class InGroupStateHandler implements StateHandler {
         Long chatId = context.getChatId();
         String chosenGroup = userStateManager.getChosenGroup(chatId);
         String groupName = groupService.getGroupName(chosenGroup);
-        if (context.getUser().getId().equals(userService.getCreatorOfTheGroup(chosenGroup))){
+        if (context.getUser().getId().equals(userService.getCreatorOfTheGroup(chosenGroup))) {
             groupService.deleteGroup(chosenGroup);
             userStateManager.setState(chatId, UserState.DEFAULT);
             userInteractionService.startCommand(chatId, context.getMessage().getMessageId(), "Deleted group " + groupName);
-            userStateManager.clearChosenGroup(chatId); // so basically i want to store states, because if someone is in group state and group is deleted, then nothing happens
+            userStateManager.clearChosenGroup(chatId);
         } else {
             groupManagementService.displayGroup(chatId,
                     chosenGroup,
@@ -101,7 +100,7 @@ public class InGroupStateHandler implements StateHandler {
     }
 
     private void showHistory(ChatContext context, String groupId) {
-        List<Expense> expenses = balanceService.getExpensesForGroup(groupId);
+        List<Expense> expenses = balanceService.getExpensesForGroup(groupId); // TODO: maybe move logic to service
         Long chatId = context.getChatId();
         userStateManager.setState(chatId, UserState.ONLY_RETURN_TO_GROUP);
         // Check if there are any expenses to display

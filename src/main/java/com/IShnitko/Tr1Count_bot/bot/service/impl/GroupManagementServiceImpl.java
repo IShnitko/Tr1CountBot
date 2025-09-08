@@ -135,13 +135,13 @@ public class GroupManagementServiceImpl implements GroupManagementService {
         try {
             List<User> members = groupService.getUsersForGroup(groupId);
             if (Objects.equals(userService.getCreatorOfTheGroup(groupId), userId)) {
-                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
+                messageService.editMessage(chatId, messageId, "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, true));
             } else {
-                messageService.editMessage(chatId, messageId,"👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, false));
+                messageService.editMessage(chatId, messageId, "👥 *Group Members*\n\n", keyboardFactory.membersMenu(members, false));
             }
             userStateManager.setState(chatId, UserState.MEMBERS_MENU);
         } catch (Exception e) {
-            messageService.editMessage(chatId, messageId,"❌ Error retrieving members", keyboardFactory.returnButton());
+            messageService.editMessage(chatId, messageId, "❌ Error retrieving members", keyboardFactory.returnButton());
         }
     }
 }

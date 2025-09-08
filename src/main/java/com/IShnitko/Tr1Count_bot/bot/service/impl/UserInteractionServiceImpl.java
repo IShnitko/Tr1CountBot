@@ -3,19 +3,16 @@ package com.IShnitko.Tr1Count_bot.bot.service.impl;
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
-import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserInteractionServiceImpl implements UserInteractionService {
     private final MessageService messageService;
     private final KeyboardFactory keyboardFactory;
-    private final UserStateManager userStateManager;
 
-    public UserInteractionServiceImpl(MessageService messageService, KeyboardFactory keyboardFactory, UserStateManager userStateManager) {
+    public UserInteractionServiceImpl(MessageService messageService, KeyboardFactory keyboardFactory) {
         this.messageService = messageService;
         this.keyboardFactory = keyboardFactory;
-        this.userStateManager = userStateManager;
     }
 
     @Override

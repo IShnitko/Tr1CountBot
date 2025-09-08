@@ -15,8 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-// MessageService.java
-
 @Service
 public class MessageServiceImpl implements MessageService {
     private static final Logger LOG = LoggerFactory.getLogger(MessageServiceImpl.class);
@@ -37,7 +35,7 @@ public class MessageServiceImpl implements MessageService {
                 .text(text)
                 .build();
         try {
-            Message sentMessage= bot.execute(message); // Use the injected bot instance
+            Message sentMessage = bot.execute(message); // Use the injected bot instance
             return sentMessage.getMessageId();
         } catch (TelegramApiException e) {
             // TODO: Log the error
@@ -54,7 +52,7 @@ public class MessageServiceImpl implements MessageService {
 //                .parseMode(ParseMode.MARKDOWNV2)
                 .build();
         try {
-            Message sentMessage= bot.execute(message); // Use the injected bot instance
+            Message sentMessage = bot.execute(message); // Use the injected bot instance
             return sentMessage.getMessageId();
         } catch (TelegramApiException e) {
             // TODO: Log the error

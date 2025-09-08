@@ -21,7 +21,7 @@ public class Tr1CountBotConfiguration {
     }
 
     @Bean
-    public OkHttpClient okHttpClient(){
+    public OkHttpClient okHttpClient() {
         return new OkHttpClient();
     }
 

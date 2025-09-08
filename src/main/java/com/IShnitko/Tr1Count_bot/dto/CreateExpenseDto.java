@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,13 +21,14 @@ public class CreateExpenseDto {
     private Long paidByUserId;
     private Map<Long, Boolean> sharedUsers = new HashMap<>();
     private LocalDateTime date;
-    private Integer messageId; // TODO: use this more and change deleting messages to editing
+    private Integer messageId;
 
     public void initializeSharedUsers(List<User> users) {
         if (users != null) {
             users.forEach(user -> sharedUsers.put(user.getTelegramId(), true));
         }
     }
+
     public String toString(UserService userService) {
         StringBuilder builder = new StringBuilder();
         builder.append("💸 *New Expense*:\n\n");

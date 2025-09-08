@@ -6,9 +6,7 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHand
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
-import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
-import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.exception.CreatorDeletionException;
 import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @StateHandlerFor(UserState.MEMBERS_MENU)
 @RequiredArgsConstructor
-public class MembersMenuHandler  implements StateHandler {
+public class MembersMenuHandler implements StateHandler {
 
     private final MessageServiceImpl messageService;
     private final UserStateManager userStateManager;

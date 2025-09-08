@@ -5,10 +5,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 
 public interface MessageService {
     Integer sendMessage(Long chatId, String text);
+
     Integer sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard);
+
     void answerCallbackQuery(String callbackQueryId);
+
     void deleteMessage(Long chatId, Integer messageId);
+
     Integer editMessage(EditMessageReplyMarkup editMessage);
+
     Integer editMessage(Long chatId, Integer messageId, String text, InlineKeyboardMarkup keyboardMarkup);
+
     Integer editMessage(Long chatId, Integer messageId, String text);
 }

@@ -54,7 +54,7 @@ public class BalanceServiceImpl implements BalanceService {
      * This method is a more streamlined replacement for addExpenseToGroup.
      *
      * @param groupId The ID of the group where the expense will be added.
-     * @param dto The DTO containing all the expense details.
+     * @param dto     The DTO containing all the expense details.
      * @return The newly created Expense entity.
      */
     @Transactional
@@ -124,36 +124,28 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     @Transactional(readOnly = true)
     public Map<User, BigDecimal> calculateBalance(String groupId) {
-        // Получаем участников группы
         List<User> members = userRepository.findUsersByGroup(groupId);
         if (members.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        // Инициализация баланса
         Map<User, BigDecimal> balance = new HashMap<>();
         for (User user : members) {
             balance.put(user, BigDecimal.ZERO);
         }
 
-        // Получаем все расходы группы
         List<Expense> expenses = expenseRepository.findExpensesByGroupId(groupId);
 
-        // Получаем все доли расходов для группы
         List<Long> expenseIds = expenses.stream().map(Expense::getId).collect(Collectors.toList());
         List<ExpenseShare> allShares = expenseShareRepository.findByExpenseIdIn(expenseIds);
 
-        // Группируем доли по расходам
         Map<Long, List<ExpenseShare>> sharesByExpense = allShares.stream()
                 .collect(Collectors.groupingBy(share -> share.getExpense().getId()));
 
-        // Рассчитываем баланс
         for (Expense expense : expenses) {
-            // Увеличиваем баланс плательщика
             User paidBy = expense.getPaidBy();
             balance.put(paidBy, balance.get(paidBy).add(expense.getAmount()));
 
-            // Уменьшаем баланс участников
             List<ExpenseShare> shares = sharesByExpense.get(expense.getId());
             if (shares != null) {
                 for (ExpenseShare share : shares) {
@@ -172,17 +164,14 @@ public class BalanceServiceImpl implements BalanceService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ExpenseNotFoundException("Expense not found: " + expenseId));
 
-        // Обновление плательщика
         updateDto.paidByUserId().ifPresent(paidByUserId -> {
             User newPayer = userRepository.findUserByTelegramId(paidByUserId)
                     .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
             expense.setPaidBy(newPayer);
         });
 
-        // Обновление заголовка
         updateDto.title().ifPresent(expense::setTitle);
 
-        // Обновление суммы
         updateDto.amount().ifPresent(amount -> {
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("Amount must be positive");
@@ -190,26 +179,21 @@ public class BalanceServiceImpl implements BalanceService {
             expense.setAmount(amount);
         });
 
-        // Обновление даты
         updateDto.date().ifPresent(expense::setDate);
 
-        // Обновление списка участников
         updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
             if (newSharedUsers.isEmpty()) {
                 throw new IllegalArgumentException("Shared users cannot be empty");
             }
 
-            // Удаляем старые доли
             expenseShareRepository.deleteByExpenseId(expenseId);
 
-            // Рассчитываем новую долю на каждого участника
             BigDecimal shareAmount = expense.getAmount().divide(
                     BigDecimal.valueOf(newSharedUsers.size()),
                     2,
                     RoundingMode.HALF_EVEN
             );
 
-            // Создаём новые доли
             List<ExpenseShare> newShares = new ArrayList<>();
             for (User user : newSharedUsers) {
                 ExpenseShare share = new ExpenseShare();

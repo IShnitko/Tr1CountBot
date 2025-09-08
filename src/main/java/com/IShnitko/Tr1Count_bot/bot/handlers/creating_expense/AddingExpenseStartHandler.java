@@ -6,7 +6,6 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHand
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
-import com.IShnitko.Tr1Count_bot.bot.service.impl.UserInteractionServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
@@ -28,7 +27,6 @@ public class AddingExpenseStartHandler implements StateHandler {
 
     private static final Pattern EXPENSE_PATTERN = Pattern.compile("^(.+)\\s+([0-9]+\\.?[0-9]*)$");
 
-    private final UserInteractionServiceImpl userInteractionService;
     private final UserStateManager userStateManager;
     private final GroupManagementService groupManagementService;
     private final AddingExpenseService addingExpenseService;
@@ -40,7 +38,7 @@ public class AddingExpenseStartHandler implements StateHandler {
         Integer messageId = context.getMessage().getMessageId();
 
         assert input != null;
-        if(input.equals(Command.BACK_COMMAND.getCommand())) {
+        if (input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.IN_THE_GROUP);
             groupManagementService.displayGroup(chatId, userStateManager.getChosenGroup(chatId), context.getMessage().getMessageId());

@@ -18,7 +18,7 @@ public class UserStateManager {
         userStates.put(chatId, state);
     }
 
-    public void setStateWithChosenGroup(Long chatId, UserState state, String groupId){
+    public void setStateWithChosenGroup(Long chatId, UserState state, String groupId) {
         userStates.put(chatId, state);
         chosenGroups.put(chatId, groupId);
     }

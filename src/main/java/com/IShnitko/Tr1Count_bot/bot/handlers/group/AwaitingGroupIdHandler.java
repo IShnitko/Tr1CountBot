@@ -25,7 +25,6 @@ public class AwaitingGroupIdHandler implements StateHandler {
     private final GroupManagementService groupManagementService;
     private final UserInteractionService userInteractionService;
     private final GroupService groupService;
-    private final MessageService messageService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {

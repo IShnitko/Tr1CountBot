@@ -12,8 +12,12 @@ import java.util.Map;
 
 public interface BalanceService {
     Map<User, BigDecimal> calculateBalance(String groupId);
+
     Expense updateExpense(Long expenseId, UpdateExpenseDto updateExpenseDto);
+
     String getBalanceText(String groupId);
+
     List<Expense> getExpensesForGroup(String groupId);
+
     Expense createExpense(String groupId, CreateExpenseDto dto);
 }

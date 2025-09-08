@@ -76,6 +76,7 @@ public class UserServiceImpl implements UserService {
             return savedUser;
         }
     }
+
     @Override
     public String getUserInfoForGroup(Long telegramId, String groupId) {
         // Formatter for a clean date display

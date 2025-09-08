@@ -51,7 +51,6 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     }
 
 
-
     private void handleUserSelection(ChatContext context, String callbackData, CreateExpenseDto expenseDto) {
         Long chatId = context.getChatId();
         Long userId = Long.parseLong(callbackData.split(":")[1]);
