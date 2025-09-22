@@ -4,7 +4,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
@@ -29,7 +29,7 @@ public class AddingExpenseStartHandler implements StateHandler {
 
     private final UserStateManager userStateManager;
     private final GroupManagementService groupManagementService;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -55,10 +55,10 @@ public class AddingExpenseStartHandler implements StateHandler {
 
             expenseDto.setTitle(title);
             expenseDto.setAmount(amount);
-            addingExpenseService.sendDateInput(chatId, messageId);
+            expenseManagementService.sendDateInput(chatId, messageId);
             userStateManager.setState(chatId, UserState.AWAITING_DATE);
         } else {
-            addingExpenseService.sendInvalidStartAddingExpense(chatId, messageId);
+            expenseManagementService.sendInvalidStartAddingExpense(chatId, messageId);
         }
     }
 }

@@ -5,7 +5,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
@@ -42,7 +42,7 @@ public class InGroupStateHandler implements StateHandler {
     private final KeyboardFactory keyboardFactory;
     private final GroupService groupService;
     private final UserService userService;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
 
 
     @Override

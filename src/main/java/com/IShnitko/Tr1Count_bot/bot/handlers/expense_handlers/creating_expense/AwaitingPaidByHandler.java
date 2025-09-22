@@ -4,7 +4,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AwaitingPaidByHandler implements StateHandler {
     private final MessageService messageService;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
     private final UserStateManager userStateManager;
 
     @Override
@@ -31,13 +31,13 @@ public class AwaitingPaidByHandler implements StateHandler {
         }
         if (input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.setState(chatId, UserState.AWAITING_DATE);
-            addingExpenseService.sendDateInput(chatId, null);
+            expenseManagementService.sendDateInput(chatId, null);
             return;
         }
 
         userStateManager.setState(chatId, UserState.AWAITING_SHARED_USERS);
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         expenseDto.setPaidByUserId(Long.valueOf(input.split("_")[1]));
-        addingExpenseService.sendSharedUsers(chatId);
+        expenseManagementService.sendSharedUsers(chatId);
     }
 }

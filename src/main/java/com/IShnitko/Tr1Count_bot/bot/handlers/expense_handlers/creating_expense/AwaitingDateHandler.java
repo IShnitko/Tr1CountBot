@@ -4,7 +4,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
@@ -22,7 +22,7 @@ public class AwaitingDateHandler implements StateHandler {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
 
     private final UserStateManager userStateManager;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
 
     @Override
     public void handle(ChatContext context) throws Exception {
@@ -32,14 +32,14 @@ public class AwaitingDateHandler implements StateHandler {
         Integer messageId = context.getMessage().getMessageId();
 
         if (input == null) {
-            addingExpenseService.sendInvalidDateInput(chatId, messageId);
+            expenseManagementService.sendInvalidDateInput(chatId, messageId);
             return;
         }
 
         if (input.equalsIgnoreCase(Command.BACK_COMMAND.getCommand())) {
             userStateManager.clearExpenseDto(chatId);
             userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
-            addingExpenseService.startAddingExpense(chatId, messageId);
+            expenseManagementService.startAddingExpense(chatId, messageId);
             return;
         }
 
@@ -48,7 +48,7 @@ public class AwaitingDateHandler implements StateHandler {
             userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
             CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
             expenseDto.setDate(LocalDate.now().atStartOfDay());
-            addingExpenseService.sendPaidBy(chatId, null);
+            expenseManagementService.sendPaidBy(chatId, null);
             return;
         }
 
@@ -58,9 +58,9 @@ public class AwaitingDateHandler implements StateHandler {
             userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
             CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
             expenseDto.setDate(expenseDate.atStartOfDay());
-            addingExpenseService.sendPaidBy(chatId, messageId);
+            expenseManagementService.sendPaidBy(chatId, messageId);
         } catch (DateTimeParseException e) {
-           addingExpenseService.sendInvalidDateInput(chatId, messageId);
+           expenseManagementService.sendInvalidDateInput(chatId, messageId);
         }
     }
 }

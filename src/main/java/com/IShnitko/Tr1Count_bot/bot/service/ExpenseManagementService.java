@@ -1,8 +1,6 @@
 package com.IShnitko.Tr1Count_bot.bot.service;
 
-import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-
-public interface AddingExpenseService {
+public interface ExpenseManagementService {
     void startAddingExpense(Long chatId, Integer messageId);
 
     void sendInvalidStartAddingExpense(Long chatId, Integer messageId);

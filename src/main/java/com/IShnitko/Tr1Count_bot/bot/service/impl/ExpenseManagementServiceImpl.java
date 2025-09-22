@@ -2,7 +2,7 @@ package com.IShnitko.Tr1Count_bot.bot.service.impl;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Service
-public class AddingExpenseServiceImpl implements AddingExpenseService {
+public class ExpenseManagementServiceImpl implements ExpenseManagementService {
     private final UserStateManager userStateManager;
     private final MessageService messageService;
     private final KeyboardFactory keyboardFactory;

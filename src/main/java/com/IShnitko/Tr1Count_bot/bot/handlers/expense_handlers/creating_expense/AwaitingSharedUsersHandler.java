@@ -5,7 +5,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.User;
@@ -27,7 +27,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     private final MessageService messageService;
     private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -79,17 +79,17 @@ public class AwaitingSharedUsersHandler implements StateHandler {
         boolean hasSelectedUsers = expenseDto.getSharedUsers().containsValue(true);
 
         if (!hasSelectedUsers) {
-            addingExpenseService.sendIncorrectSharedUsers(chatId);
+            expenseManagementService.sendIncorrectSharedUsers(chatId);
             return;
         }
 
         userStateManager.setState(chatId, UserState.CONFIRMING_EXPENSE);
-        addingExpenseService.sendSummary(chatId);
+        expenseManagementService.sendSummary(chatId);
     }
 
     private void handleReturn(Long chatId) {
         userStateManager.setState(chatId, UserState.AWAITING_PAID_BY);
-        addingExpenseService.sendPaidBy(chatId, null);
+        expenseManagementService.sendPaidBy(chatId, null);
     }
 
 }

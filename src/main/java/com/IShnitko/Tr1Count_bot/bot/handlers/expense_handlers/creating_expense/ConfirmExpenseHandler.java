@@ -4,7 +4,7 @@ import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
-import com.IShnitko.Tr1Count_bot.bot.service.AddingExpenseService;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
@@ -23,7 +23,7 @@ public class ConfirmExpenseHandler implements StateHandler {
     private final UserStateManager userStateManager;
     private final BalanceService balanceService;
     private final GroupManagementService groupManagementService;
-    private final AddingExpenseService addingExpenseService;
+    private final ExpenseManagementService expenseManagementService;
 
     @Override
     public void handle(ChatContext context) throws Exception {
@@ -45,7 +45,7 @@ public class ConfirmExpenseHandler implements StateHandler {
 
     private void handleReturn(Long chatId) {
         userStateManager.setState(chatId, UserState.AWAITING_SHARED_USERS);
-        addingExpenseService.sendSharedUsers(chatId);
+        expenseManagementService.sendSharedUsers(chatId);
     }
 
     private void handleCancel(Long chatId, Integer messageId) {
