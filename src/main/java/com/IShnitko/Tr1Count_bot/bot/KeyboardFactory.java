@@ -2,8 +2,10 @@ package com.IShnitko.Tr1Count_bot.bot;
 
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
+import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -12,8 +14,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Component
 public class KeyboardFactory {
+
+    private static final int PAGE_SIZE = 5;
 
     public InlineKeyboardMarkup mainMenu() {
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
@@ -104,6 +109,48 @@ public class KeyboardFactory {
                 .callbackData(Command.BACK_COMMAND.getCommand())
                 .build());
         rows.add(row);
+
+        inlineKeyboard.setKeyboard(rows);
+        return inlineKeyboard;
+    }
+
+    public InlineKeyboardMarkup editExpenseKeyboard(Expense expense) {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row;
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Delete")
+                .callbackData(Command.DELETE.getCommand())
+                .build());
+        rows.add(row);
+
+
+
+        inlineKeyboard.setKeyboard(rows);
+        return inlineKeyboard;
+    }
+
+    public InlineKeyboardMarkup confirmationKeyboard(String dataToDelete) {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row;
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Delete")
+                .callbackData(Command.DELETE.getCommand() + ":" + dataToDelete)
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Cancel")
+                .callbackData(Command.BACK_COMMAND.getCommand())
+                .build());
+        rows.add(row);
+
         inlineKeyboard.setKeyboard(rows);
         return inlineKeyboard;
     }
@@ -112,6 +159,7 @@ public class KeyboardFactory {
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row;
+
         for (var group : groups) {
             row = new ArrayList<>();
             row.add(InlineKeyboardButton.builder()
@@ -120,6 +168,7 @@ public class KeyboardFactory {
                     .build());
             rows.add(row);
         }
+
         row = new ArrayList<>();
         row.add(InlineKeyboardButton.builder()
                 .text("Return to main menu")
@@ -128,6 +177,71 @@ public class KeyboardFactory {
         rows.add(row);
         inlineKeyboard.setKeyboard(rows);
 
+        return inlineKeyboard;
+    }
+
+    public InlineKeyboardMarkup expenseList(List<Expense> expenses, int currentPage) {
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        log.info("Expenses size: {}, current page: {}", expenses.size(), currentPage);
+
+        for (int index = 0; index < Math.min(5, expenses.size() - currentPage * PAGE_SIZE); index++) {
+            int expenseIndex = index + currentPage * PAGE_SIZE;
+            log.info("Adding expense with index {} to keyboard", expenseIndex);
+            Expense expense = expenses.get(expenseIndex);
+
+            List<InlineKeyboardButton> expenseRow = new ArrayList<>();
+            expenseRow.add(InlineKeyboardButton.builder()
+                    .text(expense.getTitle())
+                    .callbackData(Command.INFO.getCommand() + ":" + expense.getId())
+                    .build());
+            rows.add(expenseRow);
+
+            // Add a row of interaction buttons for each expense
+            List<InlineKeyboardButton> interactionRow = new ArrayList<>();
+            interactionRow.add(InlineKeyboardButton.builder()
+                    .text("Info ℹ️")
+                    .callbackData(Command.INFO.getCommand() + ":" + expense.getId())
+                    .build());
+            interactionRow.add(InlineKeyboardButton.builder()
+                    .text("Edit ✏️")
+                    .callbackData(Command.EDIT.getCommand() + ":" + expense.getId())
+                    .build());
+            interactionRow.add(InlineKeyboardButton.builder()
+                    .text("Delete ❌")
+                    .callbackData(Command.DELETE.getCommand() + ":" + expense.getId())
+                    .build());
+            rows.add(interactionRow);
+        }
+
+        List<InlineKeyboardButton> navigationButtons = new ArrayList<>();
+        if (currentPage > 0) {
+            navigationButtons.add(InlineKeyboardButton.builder()
+                    .text("⬅️ Previous")
+                    .callbackData(Command.PREV_PAGE.getCommand())
+                    .build());
+        }
+
+        if (expenses.size() - currentPage * PAGE_SIZE > PAGE_SIZE) {
+            navigationButtons.add(InlineKeyboardButton.builder()
+                    .text("Next ➡️")
+                    .callbackData(Command.NEXT_PAGE.getCommand())
+                    .build());
+        }
+
+        if (!navigationButtons.isEmpty()) {
+            rows.add(navigationButtons);
+        }
+
+        List<InlineKeyboardButton> returnButton = new ArrayList<>();
+        returnButton.add(InlineKeyboardButton.builder()
+                .text("Return to group menu")
+                .callbackData(Command.BACK_COMMAND.getCommand())
+                .build());
+        rows.add(returnButton);
+
+        inlineKeyboard.setKeyboard(rows);
         return inlineKeyboard;
     }
 
