@@ -18,8 +18,11 @@ public enum Command {
     LINK("/link"),
     INFO("/info"),
     CONFIRM_SHARED_USERS("confirm_shared_users"),
-    CANCEL_EXPENSE_CREATION("cancel_expense_creation"),
-    DEFAULT_DATE_COMMAND("today");
+    CANCEL_EXPENSE_CREATION("cancel_expense_creation"), // TODO: change with /can...
+    DEFAULT_DATE_COMMAND("today"),
+    EDIT("/edit"),
+    PREV_PAGE("prev_page"),
+    NEXT_PAGE("/next_page");
 
     private final String command;
 
