@@ -18,10 +18,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,12 +44,12 @@ public class BalanceServiceImpl implements BalanceService {
     @Autowired
     public BalanceServiceImpl(ExpenseShareRepository expenseShareRepository,
                               ExpenseRepository expenseRepository,
-                              GroupRepository groupRepository,
+                              GroupRepository groupRepository, GroupRepository groupRepository1,
                               UserRepository userRepository,
                               @Lazy BalanceService self) {
         this.expenseShareRepository = expenseShareRepository;
         this.expenseRepository = expenseRepository;
-        this.groupRepository = groupRepository;
+        this.groupRepository = groupRepository1;
         this.userRepository = userRepository;
         this.self = self;
     }
@@ -213,6 +218,56 @@ public class BalanceServiceImpl implements BalanceService {
     public List<Expense> getExpensesForGroup(String groupId) {
         return expenseRepository.findExpensesByGroupId(groupId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Expense> getPaginatedExpensesForGroup(String groupId, int page) {
+        Pageable pageable = PageRequest.of(page, 5, Sort.by("date").descending());
+        return expenseRepository.findByGroupIdOrderByDateDesc(groupId, pageable).stream().toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getExpenseTextById(Long expenseId) {
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found with ID: " + expenseId));
+
+        List<ExpenseShare> shares = expenseShareRepository.findByExpenseId(expenseId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("💸 *Expense Details* 💸\n\n");
+        sb.append(String.format("📝 *Title:* %s\n", expense.getTitle()));
+        sb.append(String.format("💵 *Amount:* `%.2f`\n", expense.getAmount()));
+        sb.append(String.format("👤 *Paid by:* %s\n", expense.getPaidBy().getName()));
+        sb.append(String.format("🗓️ *Date:* %s\n\n", expense.getDate().format(formatter)));
+
+        sb.append("👥 *Shared with:*\n");
+        if (shares.isEmpty()) {
+            sb.append("  - This expense was not shared with anyone.\n");
+        } else {
+            for (ExpenseShare share : shares) {
+                sb.append(String.format("  - %s: `%.2f`\n", share.getUser().getName(), share.getAmount()));
+            }
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Expense> getExpenseById(Long expenseId) {
+        return expenseRepository.findById(expenseId);
+    }
+
+    @Override
+    public void deleteExpenseById(Long expenseId) {
+        expenseRepository.delete(expenseRepository.findExpenseById(expenseId)
+                .orElseThrow(
+                        () -> new ExpenseNotFoundException("Expense with id " + expenseId + " can't be deleted, because it doesn't exist")));
+    }
+
 
     @Override
     public String getBalanceText(String groupId) {
