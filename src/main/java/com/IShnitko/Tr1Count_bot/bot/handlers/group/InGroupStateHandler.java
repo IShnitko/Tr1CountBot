@@ -9,30 +9,21 @@ import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
-import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
-import com.IShnitko.Tr1Count_bot.util.TelegramApiUtils;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Component
 @Slf4j
 @StateHandlerFor(UserState.IN_THE_GROUP)
 @RequiredArgsConstructor
 public class InGroupStateHandler implements StateHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(InGroupStateHandler.class);
-
     private final MessageService messageService;
     private final GroupManagementService groupManagementService;
     private final UserInteractionService userInteractionService;
@@ -55,7 +46,7 @@ public class InGroupStateHandler implements StateHandler {
             return;
         }
 
-        if (context.getCallbackQueryId() != null) { // SAFETY CHECK
+        if (context.getCallbackQueryId() != null) {
             messageService.answerCallbackQuery(context.getCallbackQueryId());
         }
         if (context.getUpdateType() != ChatContext.UpdateType.CALLBACK) {
@@ -66,7 +57,7 @@ public class InGroupStateHandler implements StateHandler {
         Command command = Command.fromString(context.getCallbackData());
         switch (command) {
             case BALANCE -> handleBalance(context, groupId);
-            case ADD_EXPENSE -> handleAddExpense(context); // TODO: add edit and delete expense
+            case ADD_EXPENSE -> handleAddExpense(context);
             case MEMBERS -> handleMembers(context); // TODO: add update group name
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
@@ -100,52 +91,9 @@ public class InGroupStateHandler implements StateHandler {
     }
 
     private void showHistory(ChatContext context, String groupId) {
-        List<Expense> expenses = balanceService.getExpensesForGroup(groupId); // TODO: maybe move logic to service
-        Long chatId = context.getChatId();
-        userStateManager.setState(chatId, UserState.ONLY_RETURN_TO_GROUP);
-        // Check if there are any expenses to display
-        Integer messageId = context.getMessage().getMessageId();
+        userStateManager.setState(context.getChatId(), UserState.EXPENSE_HISTORY);
 
-        if (expenses.isEmpty()) {
-            messageService.editMessage(chatId, messageId, "There are no expenses recorded in this group yet\\.", keyboardFactory.returnButton());
-            return;
-        }
-
-        // Build the message using a StringBuilder for efficiency
-        StringBuilder messageBuilder = new StringBuilder();
-
-        // Add a nice header with a list count
-        messageBuilder.append("📝 *Group Expense History* 📝\n\n");
-        messageBuilder.append(String.format("You have %d expenses\\.\n\n", expenses.size()));
-
-        // Use a date formatter for consistent output
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd\\.MM\\.yyyy");
-
-        // Iterate through each expense and format it
-        for (Expense expense : expenses) {
-            // Escape any special characters in the title and user name
-            String title = TelegramApiUtils.formatString(expense.getTitle());
-            String paidBy = TelegramApiUtils.formatString(expense.getPaidBy().getName());
-            String formattedDate = TelegramApiUtils.formatString(expense.getDate().format(dateFormatter));
-
-            // Append formatted expense details
-            messageBuilder.append(String.format(
-                    """
-                            💸 *%s*
-                              💵 Amount: `%.2f`
-                              👤 Paid by: %s
-                              🗓️ Date: %s
-                            
-                            """,
-                    title,
-                    expense.getAmount(),
-                    paidBy,
-                    formattedDate
-            ));
-        }
-
-        // Send the complete, formatted message
-        messageService.editMessage(chatId, messageId, messageBuilder.toString(), keyboardFactory.returnButton());
+        expenseManagementService.sendExpenseHistoryView(context.getChatId(), context.getMessage().getMessageId(), 0);
     }
 
     private void handleBalance(ChatContext context, String groupId) {
@@ -154,7 +102,7 @@ public class InGroupStateHandler implements StateHandler {
             String balanceText = balanceService.getBalanceText(groupId);
             messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), balanceText, keyboardFactory.returnButton());
         } catch (Exception e) {
-            LOG.error("Error while calculating balance", e);
+            log.error("Error while calculating balance", e);
             messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(), "❌ Error calculating balance", keyboardFactory.returnButton());
         }
     }
@@ -164,7 +112,7 @@ public class InGroupStateHandler implements StateHandler {
         Long chatId = context.getChatId();
         try {
             userStateManager.setState(chatId, UserState.ADDING_EXPENSE_START);
-            addingExpenseService.startAddingExpense(chatId, messageId);
+            expenseManagementService.startAddingExpense(chatId, messageId);
         } catch (Exception e) {
             log.error("Error while starting creating expense", e);
             groupManagementService.displayGroup(chatId,
