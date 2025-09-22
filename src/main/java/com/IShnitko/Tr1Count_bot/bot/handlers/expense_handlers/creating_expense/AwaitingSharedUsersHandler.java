@@ -1,4 +1,4 @@
-package com.IShnitko.Tr1Count_bot.bot.handlers.creating_expense;
+package com.IShnitko.Tr1Count_bot.bot.handlers.expense_handlers.creating_expense;
 
 import com.IShnitko.Tr1Count_bot.bot.KeyboardFactory;
 import com.IShnitko.Tr1Count_bot.bot.context.ChatContext;
