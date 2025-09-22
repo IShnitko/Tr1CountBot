@@ -17,4 +17,10 @@ public interface ExpenseManagementService {
 
     void sendSummary(Long chatId);
 
+    void sendExpenseHistoryView(Long chatId, Integer messageId, int page);
+
+    void sendExpenseHistoryView(Long chatId, Integer messageId, int page, String additionalText);
+
+    void sendDeleteConfirmation(Long chatId, Integer messageId, Long expenseIdToDelete);
+
 }
