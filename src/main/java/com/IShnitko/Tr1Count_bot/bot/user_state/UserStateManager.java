@@ -13,6 +13,7 @@ public class UserStateManager {
     private final Map<Long, String> chosenGroups = new ConcurrentHashMap<>();
     private final Map<Long, Integer> messageIds = new ConcurrentHashMap<>();
     private final Map<Long, CreateExpenseDto> userExpenseDtos = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> expenseMenuPage = new ConcurrentHashMap<>();
 
     public void setState(Long chatId, UserState state) {
         userStates.put(chatId, state);
@@ -59,5 +60,24 @@ public class UserStateManager {
 
     public void clearExpenseDto(Long chatId) {
         userExpenseDtos.remove(chatId);
+    }
+
+    public Integer getAndIncPage(Long chatId) {
+        Integer page = expenseMenuPage.get(chatId);
+        if (page == null) {
+            expenseMenuPage.put(chatId, 1);
+            return 1;
+        } else {
+            expenseMenuPage.put(chatId,
+                    page + 1);
+            return page + 1;
+        }
+    }
+
+    public Integer getAndDecPage(Long chatId) {
+        Integer prevPage = expenseMenuPage.get(chatId);
+        expenseMenuPage.put(chatId,
+                prevPage - 1);
+        return prevPage - 1;
     }
 }
