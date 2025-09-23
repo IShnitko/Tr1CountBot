@@ -234,6 +234,61 @@ public class KeyboardFactory {
         return inlineKeyboard;
     }
 
+    public InlineKeyboardMarkup expenseDetailsKeyboard() { // Long expenseId
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Title✏️")
+                .callbackData(Command.EDIT_TITLE.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Amount✏️")
+                .callbackData(Command.EDIT_AMOUNT.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Paid by✏️")
+                .callbackData(Command.EDIT_PAID_BY.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Date✏️")
+                .callbackData(Command.EDIT_DATE.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("Shared with✏️")
+                .callbackData(Command.EDIT_SHARED_WITH.getCommand())
+                .build());
+        rows.add(row);
+
+        row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder()
+                .text("✅ Confirm")
+                .callbackData(Command.CONFIRM.getCommand())
+                .build());
+        row.add(InlineKeyboardButton.builder()
+                .text("❌ Cancel")
+                .callbackData(Command.CANCEL.getCommand())
+                .build());
+        rows.add(row);
+
+        inlineKeyboard.setKeyboard(rows);
+        return inlineKeyboard;
+    }
+
     public InlineKeyboardMarkup returnButton() {
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -357,14 +412,14 @@ public class KeyboardFactory {
 
         row.add(InlineKeyboardButton.builder()
                 .text("✅ Confirm")
-                .callbackData(Command.CONFIRM_SHARED_USERS.getCommand())
+                .callbackData(Command.CONFIRM.getCommand())
                 .build());
         rows.add(row);
         row = new ArrayList<>();
 
         row.add(InlineKeyboardButton.builder()
                 .text("❌ Cancel")
-                .callbackData(Command.CANCEL_EXPENSE_CREATION.getCommand())
+                .callbackData(Command.CANCEL.getCommand())
                 .build());
         rows.add(row);
         row = new ArrayList<>();
