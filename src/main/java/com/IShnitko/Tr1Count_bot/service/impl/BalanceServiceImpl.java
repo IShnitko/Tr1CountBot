@@ -1,7 +1,6 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
-import com.IShnitko.Tr1Count_bot.dto.UpdateExpenseDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.ExpenseShare;
 import com.IShnitko.Tr1Count_bot.model.Group;
@@ -163,55 +162,55 @@ public class BalanceServiceImpl implements BalanceService {
         return balance;
     }
 
-    @Override
-    @Transactional
-    public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
-        Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found: " + expenseId));
-
-        updateDto.paidByUserId().ifPresent(paidByUserId -> {
-            User newPayer = userRepository.findUserByTelegramId(paidByUserId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
-            expense.setPaidBy(newPayer);
-        });
-
-        updateDto.title().ifPresent(expense::setTitle);
-
-        updateDto.amount().ifPresent(amount -> {
-            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Amount must be positive");
-            }
-            expense.setAmount(amount);
-        });
-
-        updateDto.date().ifPresent(expense::setDate);
-
-        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
-            if (newSharedUsers.isEmpty()) {
-                throw new IllegalArgumentException("Shared users cannot be empty");
-            }
-
-            expenseShareRepository.deleteByExpenseId(expenseId);
-
-            BigDecimal shareAmount = expense.getAmount().divide(
-                    BigDecimal.valueOf(newSharedUsers.size()),
-                    2,
-                    RoundingMode.HALF_EVEN
-            );
-
-            List<ExpenseShare> newShares = new ArrayList<>();
-            for (User user : newSharedUsers) {
-                ExpenseShare share = new ExpenseShare();
-                share.setExpense(expense);
-                share.setUser(user);
-                share.setAmount(shareAmount);
-                newShares.add(share);
-            }
-            expenseShareRepository.saveAll(newShares);
-        });
-
-        return expenseRepository.save(expense);
-    }
+//    @Override
+//    @Transactional
+//    public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
+//        Expense expense = expenseRepository.findById(expenseId)
+//                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found: " + expenseId));
+//
+//        updateDto.paidByUserId().ifPresent(paidByUserId -> {
+//            User newPayer = userRepository.findUserByTelegramId(paidByUserId)
+//                    .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
+//            expense.setPaidBy(newPayer);
+//        });
+//
+//        updateDto.title().ifPresent(expense::setTitle);
+//
+//        updateDto.amount().ifPresent(amount -> {
+//            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+//                throw new IllegalArgumentException("Amount must be positive");
+//            }
+//            expense.setAmount(amount);
+//        });
+//
+//        updateDto.date().ifPresent(expense::setDate);
+//
+//        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
+//            if (newSharedUsers.isEmpty()) {
+//                throw new IllegalArgumentException("Shared users cannot be empty");
+//            }
+//
+//            expenseShareRepository.deleteByExpenseId(expenseId);
+//
+//            BigDecimal shareAmount = expense.getAmount().divide(
+//                    BigDecimal.valueOf(newSharedUsers.size()),
+//                    2,
+//                    RoundingMode.HALF_EVEN
+//            );
+//
+//            List<ExpenseShare> newShares = new ArrayList<>();
+//            for (User user : newSharedUsers) {
+//                ExpenseShare share = new ExpenseShare();
+//                share.setExpense(expense);
+//                share.setUser(user);
+//                share.setAmount(shareAmount);
+//                newShares.add(share);
+//            }
+//            expenseShareRepository.saveAll(newShares);
+//        });
+//
+//        return expenseRepository.save(expense);
+//    }
 
     @Override
     @Transactional(readOnly = true)
