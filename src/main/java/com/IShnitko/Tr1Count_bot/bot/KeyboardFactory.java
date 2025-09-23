@@ -193,26 +193,15 @@ public class KeyboardFactory {
 
             List<InlineKeyboardButton> expenseRow = new ArrayList<>();
             expenseRow.add(InlineKeyboardButton.builder()
-                    .text(expense.getTitle())
+                    .text(expense.getTitle() + " ℹ️")
                     .callbackData(Command.INFO.getCommand() + ":" + expense.getId())
                     .build());
-            rows.add(expenseRow);
 
-            // Add a row of interaction buttons for each expense
-            List<InlineKeyboardButton> interactionRow = new ArrayList<>();
-            interactionRow.add(InlineKeyboardButton.builder()
-                    .text("Info ℹ️")
-                    .callbackData(Command.INFO.getCommand() + ":" + expense.getId())
-                    .build());
-            interactionRow.add(InlineKeyboardButton.builder()
-                    .text("Edit ✏️")
-                    .callbackData(Command.EDIT.getCommand() + ":" + expense.getId())
-                    .build());
-            interactionRow.add(InlineKeyboardButton.builder()
+            expenseRow.add(InlineKeyboardButton.builder()
                     .text("Delete ❌")
                     .callbackData(Command.DELETE.getCommand() + ":" + expense.getId())
                     .build());
-            rows.add(interactionRow);
+            rows.add(expenseRow);
         }
 
         List<InlineKeyboardButton> navigationButtons = new ArrayList<>();
