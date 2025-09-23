@@ -17,10 +17,14 @@ public enum Command {
     HISTORY("/history"),
     LINK("/link"),
     INFO("/info"),
-    CONFIRM_SHARED_USERS("confirm_shared_users"),
-    CANCEL_EXPENSE_CREATION("cancel_expense_creation"), // TODO: change with /can...
-    DEFAULT_DATE_COMMAND("today"),
-    EDIT("/edit"),
+    CONFIRM("/confirm"),
+    CANCEL("/cancel"),
+    DEFAULT_DATE_COMMAND("/today"),
+    EDIT_TITLE("/edit_title"),
+    EDIT_AMOUNT("/edit_amount"),
+    EDIT_PAID_BY("/edit_paid_by"),
+    EDIT_DATE("/edit_date"),
+    EDIT_SHARED_WITH("/edit_shared_with"),
     PREV_PAGE("prev_page"),
     NEXT_PAGE("/next_page");
 
