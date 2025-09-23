@@ -11,6 +11,7 @@ import com.IShnitko.Tr1Count_bot.bot.service.GroupManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.service.UserInteractionService;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.dto.ExpenseUpdateDto;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.impl.BalanceServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +77,6 @@ public class ExpenseHistoryHandler implements StateHandler {
             case PREV_PAGE -> showPreviousPage(context);
             case BACK_COMMAND -> returnToGroupMenu(context, groupId);
             case INFO -> showInfoForExpense(context, expenseId);
-            case EDIT -> editExpense(context);
             case DELETE -> deleteExpense(context, expenseId);
         }
     }
@@ -86,15 +86,12 @@ public class ExpenseHistoryHandler implements StateHandler {
         expenseManagementService.sendDeleteConfirmation(context.getChatId(), context.getMessage().getMessageId(), expenseId);
     }
 
-    private void editExpense(ChatContext context) {
-        userStateManager.setState(context.getChatId(), UserState.EDITING_EXPENSE);
-
-    }
-
     private void showInfoForExpense(ChatContext context, Long expenseId) {
-        userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_EXPENSE_HISTORY);
+        userStateManager.setState(context.getChatId(), UserState.EXPENSE_INFO);
+        ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(context.getChatId());
+        expenseUpdateDto.setId(expenseId);
         messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                balanceService.getExpenseTextById(expenseId), keyboardFactory.returnButton());
+                balanceService.getExpenseTextById(expenseId), keyboardFactory.expenseDetailsKeyboard());
     }
 
     private void returnToGroupMenu(ChatContext context, String groupId) {

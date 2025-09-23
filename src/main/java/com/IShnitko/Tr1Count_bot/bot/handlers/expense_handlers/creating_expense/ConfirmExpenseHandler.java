@@ -37,8 +37,8 @@ public class ConfirmExpenseHandler implements StateHandler {
         Command command = Command.fromString(context.getCallbackData());
 
         switch (command) {
-            case CONFIRM_SHARED_USERS -> handleConfirm(chatId, messageId);
-            case CANCEL_EXPENSE_CREATION -> handleCancel(chatId, messageId);
+            case CONFIRM -> handleConfirm(chatId, messageId);
+            case CANCEL -> handleCancel(chatId, messageId);
             case BACK_COMMAND -> handleReturn(chatId);
         }
     }
