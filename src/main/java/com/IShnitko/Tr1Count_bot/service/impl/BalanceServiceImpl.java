@@ -1,6 +1,8 @@
 package com.IShnitko.Tr1Count_bot.service.impl;
 
+import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
+import com.IShnitko.Tr1Count_bot.dto.ExpenseUpdateDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.ExpenseShare;
 import com.IShnitko.Tr1Count_bot.model.Group;
@@ -13,6 +15,7 @@ import com.IShnitko.Tr1Count_bot.service.BalanceService;
 import com.IShnitko.Tr1Count_bot.exception.ExpenseNotFoundException;
 import com.IShnitko.Tr1Count_bot.exception.GroupNotFoundException;
 import com.IShnitko.Tr1Count_bot.exception.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class BalanceServiceImpl implements BalanceService {
 
@@ -39,18 +43,20 @@ public class BalanceServiceImpl implements BalanceService {
 
     // Self-injection to ensure @Transactional works on self-invocations
     private final BalanceService self;
+    private final UserStateManager userStateManager;
 
     @Autowired
     public BalanceServiceImpl(ExpenseShareRepository expenseShareRepository,
                               ExpenseRepository expenseRepository,
                               GroupRepository groupRepository, GroupRepository groupRepository1,
                               UserRepository userRepository,
-                              @Lazy BalanceService self) {
+                              @Lazy BalanceService self, UserStateManager userStateManager) {
         this.expenseShareRepository = expenseShareRepository;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository1;
         this.userRepository = userRepository;
         this.self = self;
+        this.userStateManager = userStateManager;
     }
 
     /**
@@ -162,56 +168,6 @@ public class BalanceServiceImpl implements BalanceService {
         return balance;
     }
 
-//    @Override
-//    @Transactional
-//    public Expense updateExpense(Long expenseId, UpdateExpenseDto updateDto) {
-//        Expense expense = expenseRepository.findById(expenseId)
-//                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found: " + expenseId));
-//
-//        updateDto.paidByUserId().ifPresent(paidByUserId -> {
-//            User newPayer = userRepository.findUserByTelegramId(paidByUserId)
-//                    .orElseThrow(() -> new UserNotFoundException("User not found: " + paidByUserId));
-//            expense.setPaidBy(newPayer);
-//        });
-//
-//        updateDto.title().ifPresent(expense::setTitle);
-//
-//        updateDto.amount().ifPresent(amount -> {
-//            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-//                throw new IllegalArgumentException("Amount must be positive");
-//            }
-//            expense.setAmount(amount);
-//        });
-//
-//        updateDto.date().ifPresent(expense::setDate);
-//
-//        updateDto.newSharedUsers().ifPresent(newSharedUsers -> {
-//            if (newSharedUsers.isEmpty()) {
-//                throw new IllegalArgumentException("Shared users cannot be empty");
-//            }
-//
-//            expenseShareRepository.deleteByExpenseId(expenseId);
-//
-//            BigDecimal shareAmount = expense.getAmount().divide(
-//                    BigDecimal.valueOf(newSharedUsers.size()),
-//                    2,
-//                    RoundingMode.HALF_EVEN
-//            );
-//
-//            List<ExpenseShare> newShares = new ArrayList<>();
-//            for (User user : newSharedUsers) {
-//                ExpenseShare share = new ExpenseShare();
-//                share.setExpense(expense);
-//                share.setUser(user);
-//                share.setAmount(shareAmount);
-//                newShares.add(share);
-//            }
-//            expenseShareRepository.saveAll(newShares);
-//        });
-//
-//        return expenseRepository.save(expense);
-//    }
-
     @Override
     @Transactional(readOnly = true)
     public List<Expense> getExpensesForGroup(String groupId) {
@@ -243,14 +199,42 @@ public class BalanceServiceImpl implements BalanceService {
         sb.append(String.format("🗓️ *Date:* %s\n\n", expense.getDate().format(formatter)));
 
         sb.append("👥 *Shared with:*\n");
-        if (shares.isEmpty()) {
-            sb.append("  - This expense was not shared with anyone.\n");
-        } else {
-            for (ExpenseShare share : shares) {
-                sb.append(String.format("  - %s: `%.2f`\n", share.getUser().getName(), share.getAmount()));
-            }
+        for (ExpenseShare share : shares) {
+            sb.append(String.format("  - %s: `%.2f`\n", share.getUser().getName(), share.getAmount()));
         }
 
+
+        return sb.toString();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getExpenseTextFromExpenseDTO(ExpenseUpdateDto expenseUpdateDto) {
+        log.info("Stared creating text for expense DTO");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("💸 *Expense Details* 💸\n\n");
+        sb.append(String.format("📝 *Title:* %s\n", expenseUpdateDto.getTitle()));
+        sb.append(String.format("💵 *Amount:* `%.2f`\n", expenseUpdateDto.getAmount()));
+        sb.append(String.format("👤 *Paid by:* %s\n",
+                userRepository.findUserByTelegramId(
+                        expenseUpdateDto.getPaidByUserId()
+                ).orElseThrow(() -> new UserNotFoundException("Can't build text for expense DTO, because Paid by user doesn't exist"))
+                        .getName()
+        ));
+        sb.append(String.format("🗓️ *Date:* %s\n\n", expenseUpdateDto.getDate().format(formatter)));
+
+        sb.append("👥 *Shared with:*\n");
+        for (Map.Entry<Long, BigDecimal> share : expenseUpdateDto.getSharedUsers().entrySet()) {
+            sb.append(String.format("  - %s: `%.2f`\n",
+                    userRepository.findUserByTelegramId(
+                            share.getKey()
+                    ).orElseThrow(() -> new UserNotFoundException("Can't build text for expense DTO, because Paid by user doesn't exist"))
+                            .getName(),
+                    share.getValue()));
+        }
+        log.info("Returning text for expense DTO");
         return sb.toString();
     }
 
@@ -266,6 +250,58 @@ public class BalanceServiceImpl implements BalanceService {
                 .orElseThrow(
                         () -> new ExpenseNotFoundException("Expense with id " + expenseId + " can't be deleted, because it doesn't exist")));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpenseUpdateDto buildExpenseUpdateDto(Long chatId, Long expenseId) {
+        Expense expense = expenseRepository.findExpenseById(expenseId)
+                .orElseThrow(() -> new ExpenseNotFoundException("Can't set fields to DTO, because source expense doesn't exist"));
+        List<ExpenseShare> expenseShares = expenseShareRepository.findByExpenseId(expenseId);
+        return userStateManager.getOrCreateExpenseUpdateDto(chatId).fromEntity(expense, expenseShares);
+    }
+
+    @Override
+    @Transactional
+    public Long saveExpenseUpdateDto(Long chatId) {
+        ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(chatId);
+
+        Expense expense = expenseRepository.findExpenseById(expenseUpdateDto.getId())
+                .orElseThrow(() -> new ExpenseNotFoundException("Can't save expense dto, because target expense doesn't exist"));
+
+        // update fields
+        expense.setTitle(expenseUpdateDto.getTitle());
+        expense.setAmount(expenseUpdateDto.getAmount());
+        expense.setDate(expenseUpdateDto.getDate());
+        expense.setPaidBy(
+                userRepository.findUserByTelegramId(expenseUpdateDto.getPaidByUserId())
+                        .orElseThrow(() -> new UserNotFoundException("Can't set user, because it doesn't exist"))
+        );
+        expense.setCreatedAt(expenseUpdateDto.getDate());
+
+        // rebuild shares
+        expenseShareRepository.deleteByExpenseId(expenseUpdateDto.getId());
+        expenseShareRepository.flush(); // not sure if it is safe to use this method
+
+        List<ExpenseShare> shares = expenseUpdateDto.getSharedUsers().entrySet().stream()
+                .map(entry -> {
+                    Long telegramId = entry.getKey();
+                    BigDecimal amount = entry.getValue();
+
+                    User user = userRepository.findUserByTelegramId(telegramId)
+                            .orElseThrow(() -> new UserNotFoundException("Can't create share, user doesn't exist: " + telegramId));
+
+                    ExpenseShare share = new ExpenseShare();
+                    share.setExpense(expense);
+                    share.setUser(user);
+                    share.setAmount(amount);
+                    return share;
+                })
+                .toList();
+
+        expenseShareRepository.saveAll(shares);
+        return expense.getId();
+    }
+
 
 
     @Override

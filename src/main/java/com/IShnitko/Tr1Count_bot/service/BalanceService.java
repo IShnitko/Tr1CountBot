@@ -1,6 +1,7 @@
 package com.IShnitko.Tr1Count_bot.service;
 
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
+import com.IShnitko.Tr1Count_bot.dto.ExpenseUpdateDto;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.User;
 import org.springframework.data.domain.Page;
@@ -30,4 +31,8 @@ public interface BalanceService {
     Optional<Expense> getExpenseById(Long expenseId);
 
     void deleteExpenseById(Long expenseId);
+
+    ExpenseUpdateDto buildExpenseUpdateDto(Long chatId, Long expenseId);
+
+    Long saveExpenseUpdateDto(Long chatId);
 }
