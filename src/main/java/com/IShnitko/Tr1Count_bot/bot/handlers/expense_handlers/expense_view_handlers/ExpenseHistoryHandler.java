@@ -88,10 +88,11 @@ public class ExpenseHistoryHandler implements StateHandler {
 
     private void showInfoForExpense(ChatContext context, Long expenseId) {
         userStateManager.setState(context.getChatId(), UserState.EXPENSE_INFO);
-        ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(context.getChatId());
-        expenseUpdateDto.setId(expenseId);
+        ExpenseUpdateDto expenseUpdateDto = balanceService.buildExpenseUpdateDto(context.getChatId(), expenseId);
+        log.info("ExpenseUpdateDTO: {}", userStateManager.getOrCreateExpenseUpdateDto(context.getChatId()).toString());
         messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                balanceService.getExpenseTextById(expenseId), keyboardFactory.expenseDetailsKeyboard());
+                balanceService.getExpenseTextFromExpenseDTO(expenseUpdateDto),
+                keyboardFactory.expenseDetailsKeyboard());
     }
 
     private void returnToGroupMenu(ChatContext context, String groupId) {
