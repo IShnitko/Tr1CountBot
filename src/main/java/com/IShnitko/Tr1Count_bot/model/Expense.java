@@ -38,4 +38,8 @@ public class Expense {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExpenseShare> shares = new ArrayList<>();
+
 }
