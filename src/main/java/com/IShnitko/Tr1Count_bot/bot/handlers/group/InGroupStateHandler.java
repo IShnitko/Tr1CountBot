@@ -61,7 +61,7 @@ public class InGroupStateHandler implements StateHandler {
             case MEMBERS -> handleMembers(context); // TODO: add update group name
             case HELP -> handleHelp(context);
             case BACK_COMMAND -> handleBackToMain(context);
-            case HISTORY -> showHistory(context, groupId);
+            case HISTORY -> showHistory(context);
             case LINK -> sendJoinLink(context);
             case DELETE -> handleDelete(context); // TODO: add conformation page before deleting
         }
@@ -90,7 +90,7 @@ public class InGroupStateHandler implements StateHandler {
         userStateManager.setState(context.getChatId(), UserState.ONLY_RETURN_TO_GROUP);
     }
 
-    private void showHistory(ChatContext context, String groupId) {
+    private void showHistory(ChatContext context) {
         userStateManager.setState(context.getChatId(), UserState.EXPENSE_HISTORY);
 
         expenseManagementService.sendExpenseHistoryView(context.getChatId(), context.getMessage().getMessageId(), 0);
