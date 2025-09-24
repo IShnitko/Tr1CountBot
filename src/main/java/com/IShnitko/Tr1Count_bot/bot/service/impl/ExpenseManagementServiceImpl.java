@@ -60,8 +60,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
 
     @Override
     public void sendDateInput(Long chatId, Integer inputMessageId) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-        if (inputMessageId != null) messageService.deleteMessage(chatId, inputMessageId);
+        if (inputMessageId != null) messageService.deleteMessage(chatId, inputMessageId); // TODO: probably move to handler
         messageService.editMessage(chatId,
                 userStateManager.getBotMessageId(chatId),
                 "Input date in format dd.mm.yy or use options below",
@@ -70,8 +69,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
 
     @Override
     public void sendInvalidDateInput(Long chatId, Integer messageId) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-        messageService.deleteMessage(chatId, messageId);
+        if (messageId != null) messageService.deleteMessage(chatId, messageId);
         messageService.editMessage(chatId,
                 userStateManager.getBotMessageId(chatId),
                 "❌ Invalid input. Please send the date in format `dd.mm.yy` or type `today`.",
@@ -80,8 +78,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
 
     @Override
     public void sendPaidBy(Long chatId, Integer messageId) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
-        if (messageId != null) messageService.deleteMessage(chatId, messageId);
+        if (messageId != null) messageService.deleteMessage(chatId, messageId); // TODO: probably move to handler
         messageService.editMessage(chatId,
                 userStateManager.getBotMessageId(chatId),
                 "Choose who paid for this purchase:", keyboardFactory.membersMenu(

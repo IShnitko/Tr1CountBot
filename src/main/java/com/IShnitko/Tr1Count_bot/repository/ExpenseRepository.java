@@ -14,4 +14,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     Page<Expense> findByGroupIdOrderByDateDesc(String groupId, Pageable pageable);
 
     Optional<Expense> findExpenseById(long id);
+
 }
