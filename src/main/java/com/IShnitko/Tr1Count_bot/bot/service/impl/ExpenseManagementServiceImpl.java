@@ -13,10 +13,12 @@ import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.service.UserService;
 import com.IShnitko.Tr1Count_bot.service.impl.BalanceServiceImpl;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class ExpenseManagementServiceImpl implements ExpenseManagementService {
@@ -29,7 +31,6 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
 
     @Override
     public void startAddingExpense(Long chatId, Integer messageId) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         String instructions = """
                  💸 *Add New Expense*
                                 \s
@@ -39,20 +40,18 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
                  Example:
                  `Dinner 25.50`
                 \s""";
-        Integer sentMessageId = messageService.editMessage(chatId,
+        messageService.editMessage(chatId,
                 messageId,
                 instructions,
                 keyboardFactory.returnButton());
-        expenseDto.setMessageId(sentMessageId);
     }
 
     @Override
     public void sendInvalidStartAddingExpense(Long chatId, Integer messageId) {
-        CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         messageService.deleteMessage(chatId, messageId);
         messageService.editMessage(
                 chatId,
-                expenseDto.getMessageId(),
+                userStateManager.getBotMessageId(chatId),
                 "❌ Invalid format. Please send in format: `<description> <amount>`.",
                 keyboardFactory.returnButton()
         );
@@ -64,7 +63,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         if (inputMessageId != null) messageService.deleteMessage(chatId, inputMessageId);
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(),
+                userStateManager.getBotMessageId(chatId),
                 "Input date in format dd.mm.yy or use options below",
                 keyboardFactory.dateButton());
     }
@@ -74,7 +73,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         messageService.deleteMessage(chatId, messageId);
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(),
+                userStateManager.getBotMessageId(chatId),
                 "❌ Invalid input. Please send the date in format `dd.mm.yy` or type `today`.",
                 keyboardFactory.dateButton());
     }
@@ -84,7 +83,8 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         if (messageId != null) messageService.deleteMessage(chatId, messageId);
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(), "Choose who paid for this purchase:", keyboardFactory.membersMenu(
+                userStateManager.getBotMessageId(chatId),
+                "Choose who paid for this purchase:", keyboardFactory.membersMenu(
                         groupService.getUsersForGroup(
                                 userStateManager.getChosenGroup(chatId)
                         ), false)
@@ -101,8 +101,8 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
 
         // Send a new message with a keyboard for selecting shared users.
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(),
-                "Now, select who shared the expense:",
+                userStateManager.getBotMessageId(chatId),
+                "Select who shared the expense:",
                 keyboardFactory.createSharedUsersKeyboard(members, expenseDto));
     }
 
@@ -110,7 +110,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
     public void sendIncorrectSharedUsers(Long chatId) {
         CreateExpenseDto expenseDto = userStateManager.getOrCreateExpenseDto(chatId);
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(),
+                userStateManager.getBotMessageId(chatId),
                 "Please select at least one user to share the expense:",
                 keyboardFactory.createSharedUsersKeyboard(
                         groupService.getUsersForGroup(
@@ -129,7 +129,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         // Set the state to CONFIRMING_EXPENSE and send the final message with buttons
         userStateManager.setState(chatId, UserState.CONFIRMING_EXPENSE);
         messageService.editMessage(chatId,
-                expenseDto.getMessageId(),
+                userStateManager.getBotMessageId(chatId),
                 summary,
                 keyboardFactory.finalConfirmationKeyboard());
     }
@@ -168,6 +168,21 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
                 keyboardFactory.confirmationKeyboard(expenseIdToDelete.toString()));
     }
 
+    @Override
+    public void sendAmountInput(Long chatId, Integer messageId) {
+        messageService.editMessage(chatId,
+                messageId,
+                "Input new price for your expense: ",
+                keyboardFactory.returnButton());
+    }
+
+    @Override
+    public void sendTitleInput(Long chatId, Integer messageId) {
+        messageService.editMessage(chatId,
+                messageId,
+                "Input new title for your expense: ",
+                keyboardFactory.returnButton());
+    }
 
 
 }

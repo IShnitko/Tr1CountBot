@@ -23,4 +23,7 @@ public interface ExpenseManagementService {
 
     void sendDeleteConfirmation(Long chatId, Integer messageId, Long expenseIdToDelete);
 
+    void sendAmountInput(Long chatId, Integer messageId);
+
+    void sendTitleInput(Long chatId, Integer messageId);
 }
