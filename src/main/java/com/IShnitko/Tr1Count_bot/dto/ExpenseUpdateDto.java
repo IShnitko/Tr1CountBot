@@ -25,45 +25,25 @@ public class ExpenseUpdateDto {
     private LocalDateTime date;
     private Map<Long, BigDecimal> sharedUsers = new HashMap<>();
 
-    public static ExpenseUpdateDto fromEntity(Expense expense, List<ExpenseShare> expenseShares) {
-        ExpenseUpdateDto dto = new ExpenseUpdateDto();
-        dto.setId(expense.getId());
-        dto.setTitle(expense.getTitle());
-        dto.setAmount(expense.getAmount());
-        dto.setPaidByUserId(expense.getPaidBy().getTelegramId());
-        dto.setDate(expense.getDate());
+    public ExpenseUpdateDto fromEntity(Expense expense, List<ExpenseShare> expenseShares) {
+        this.id = expense.getId();
+        this.title = expense.getTitle();
+        this.amount = expense.getAmount();
+        this.paidByUserId = expense.getPaidBy().getTelegramId();
+        this.date = expense.getDate();
 
         Map<Long, BigDecimal> map = new HashMap<>();
         for (ExpenseShare share : expenseShares) {
             map.put(share.getUser().getTelegramId(), share.getAmount());
         }
-        dto.setSharedUsers(map);
+        this.sharedUsers = map;
 
-        return dto;
+        return this;
     }
 
-    public void applyToEntity(Expense expense, List<ExpenseShare> expenseShares, Map<Long, User> userCache) {
-        if (title != null) {
-            expense.setTitle(title);
-        }
-        if (amount != null) {
-            expense.setAmount(amount);
-        }
-        if (paidByUserId != null && userCache.containsKey(paidByUserId)) {
-            expense.setPaidBy(userCache.get(paidByUserId));
-        }
-        if (date != null) {
-            expense.setDate(date);
-        }
 
-        if (sharedUsers != null && !sharedUsers.isEmpty()) {
-            for (ExpenseShare share : expenseShares) {
-                BigDecimal newAmount = sharedUsers.get(share.getUser().getTelegramId());
-                if (newAmount != null) {
-                    share.setAmount(newAmount);
-                }
-            }
-        }
+    public void applyToEntity(Expense expense, ExpenseUpdateDto expenseUpdateDto) {
+
     }
 
     public String toString(UserService userService) {
