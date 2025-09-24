@@ -10,6 +10,7 @@ import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Component
 @StateHandlerFor(UserState.ADDING_EXPENSE_START)
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class AddingExpenseStartHandler implements StateHandler {
         String input = context.getText() != null ? context.getText() : context.getCallbackData();
         Long chatId = context.getChatId();
         Integer messageId = context.getMessage().getMessageId();
+        log.info("Bot message id (Expense DTO) was set to {}", messageId);
 
         assert input != null;
         if (input.equals(Command.BACK_COMMAND.getCommand())) {
