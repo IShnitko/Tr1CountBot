@@ -21,13 +21,15 @@ public interface BalanceService {
 
     List<Expense> getExpensesForGroup(String groupId);
 
+    @SuppressWarnings("UnusedReturnValue")
     Expense createExpense(String groupId, CreateExpenseDto dto);
 
     List<Expense> getPaginatedExpensesForGroup(String groupId, int page);
 
     String getExpenseTextById(Long expenseId);
 
-    // You might also need this for convenience
+    String getExpenseTextFromExpenseDTO(ExpenseUpdateDto expenseUpdateDto);
+
     Optional<Expense> getExpenseById(Long expenseId);
 
     void deleteExpenseById(Long expenseId);
