@@ -171,7 +171,7 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     @Transactional(readOnly = true)
     public List<Expense> getExpensesForGroup(String groupId) {
-        return expenseRepository.findExpensesByGroupId(groupId);
+        return expenseRepository.findExpensesByGroupIdOrderByDateAsc(groupId);
     }
 
     @Override

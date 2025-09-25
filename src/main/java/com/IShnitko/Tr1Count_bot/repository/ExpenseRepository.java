@@ -15,4 +15,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     Optional<Expense> findExpenseById(long id);
 
+    List<Expense> findExpensesByGroupIdOrderByDateAsc(String groupId);
 }
