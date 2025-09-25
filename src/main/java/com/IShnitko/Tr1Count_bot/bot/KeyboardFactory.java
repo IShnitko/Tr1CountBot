@@ -188,7 +188,6 @@ public class KeyboardFactory {
 
         for (int index = 0; index < Math.min(5, expenses.size() - currentPage * PAGE_SIZE); index++) {
             int expenseIndex = index + currentPage * PAGE_SIZE;
-            log.info("Adding expense with index {} to keyboard", expenseIndex);
             Expense expense = expenses.get(expenseIndex);
 
             List<InlineKeyboardButton> expenseRow = new ArrayList<>();
