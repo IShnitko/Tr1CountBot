@@ -138,7 +138,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         );
         messageService.editMessage(chatId,
                 messageId,
-                expenses.size() > 5 ? "Expense history of your group. Page 1" : "Expense history of your group.",
+                expenses.size() > 5 ? "Expense history of your group. Page " + (page + 1) : "Expense history of your group.",
                 keyboardFactory.expenseList(expenses, page));
     }
 
@@ -150,7 +150,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         messageService.editMessage(chatId,
                 messageId,
                 additionalText + "\n" +
-                (expenses.size() > 5 ? "Expense history of your group. Page " + page : "Expense history of your group."),
+                (expenses.size() > 5 ? "Expense history of your group. Page " + (page + 1) : "Expense history of your group."),
                 keyboardFactory.expenseList(expenses, page));
     }
 
