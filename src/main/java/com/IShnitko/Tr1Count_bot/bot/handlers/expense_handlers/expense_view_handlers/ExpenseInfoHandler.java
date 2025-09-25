@@ -65,6 +65,7 @@ public class ExpenseInfoHandler implements StateHandler {
     }
 
     private void saveEUDAndExit(ChatContext context) {
+        userStateManager.setState(context.getChatId(), UserState.EXPENSE_HISTORY);
         Long savedExpenseId = balanceService.saveExpenseUpdateDto(context.getChatId());
         userStateManager.clearExpenseUpdateDto(context.getChatId());
         expenseManagementService.sendExpenseHistoryView(context.getChatId(), context.getMessage().getMessageId(), 0,
