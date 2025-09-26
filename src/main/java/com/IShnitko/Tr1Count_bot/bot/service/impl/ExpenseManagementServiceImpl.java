@@ -6,6 +6,7 @@ import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.MessageService;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
+import com.IShnitko.Tr1Count_bot.dto.ExpenseUpdateDto;
 import com.IShnitko.Tr1Count_bot.exception.ExpenseNotFoundException;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.User;
@@ -100,7 +101,7 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
         messageService.editMessage(chatId,
                 userStateManager.getBotMessageId(chatId),
                 "Select who shared the expense:",
-                keyboardFactory.createSharedUsersKeyboard(members, expenseDto));
+                keyboardFactory.createSharedUsersKeyboard(members, expenseDto, userService));
     }
 
     @Override
@@ -113,7 +114,8 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
                         groupService.getUsersForGroup(
                                 userStateManager.getChosenGroup(chatId)
                         ),
-                        expenseDto));
+                        expenseDto,
+                        userService));
     }
 
     @Override
@@ -181,5 +183,29 @@ public class ExpenseManagementServiceImpl implements ExpenseManagementService {
                 keyboardFactory.returnButton());
     }
 
+    @Override
+    public void sendExpenseInfo(Long chatId, Integer inputMessageId) {
+        ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(chatId);
+
+        if(inputMessageId != null)
+            messageService.deleteMessage(chatId, inputMessageId);
+
+        messageService.editMessage(chatId, userStateManager.getBotMessageId(chatId),
+                balanceService.getExpenseTextFromExpenseDTO(
+                        expenseUpdateDto
+                ),
+                keyboardFactory.expenseDetailsKeyboard());
+    }
+
+    @Override
+    public void sendIncorrectAmount(Long chatId, Integer messageId) {
+        if(messageId != null)
+            messageService.deleteMessage(chatId, messageId);
+
+        messageService.editMessage(chatId,
+                userStateManager.getBotMessageId(chatId),
+                "Incorrect amount, input a number like 123.45",
+                keyboardFactory.returnButton());
+    }
 
 }

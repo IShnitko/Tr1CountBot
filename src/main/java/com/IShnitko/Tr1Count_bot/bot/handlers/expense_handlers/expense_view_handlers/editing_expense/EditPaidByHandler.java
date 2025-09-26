@@ -6,6 +6,7 @@ import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.StateHandler;
 import com.IShnitko.Tr1Count_bot.bot.handlers.state_handler.annotation.StateHandlerFor;
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
+import com.IShnitko.Tr1Count_bot.bot.service.ExpenseManagementService;
 import com.IShnitko.Tr1Count_bot.bot.service.impl.MessageServiceImpl;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
 import com.IShnitko.Tr1Count_bot.dto.ExpenseUpdateDto;
@@ -21,8 +22,7 @@ import org.springframework.stereotype.Component;
 public class EditPaidByHandler implements StateHandler {
     private final MessageServiceImpl messageService;
     private final UserStateManager userStateManager;
-    private final BalanceServiceImpl balanceService;
-    private final KeyboardFactory keyboardFactory;
+    private final ExpenseManagementService expenseManagementService;
 
     @Override
     public void handle(ChatContext context) throws Exception {
@@ -37,11 +37,7 @@ public class EditPaidByHandler implements StateHandler {
         if (input.equals(Command.BACK_COMMAND.getCommand())) {
             userStateManager.setState(chatId, UserState.EXPENSE_INFO);
 
-            messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                    balanceService.getExpenseTextFromExpenseDTO(
-                            userStateManager.getOrCreateExpenseUpdateDto(chatId)
-                    ),
-                    keyboardFactory.expenseDetailsKeyboard());
+            expenseManagementService.sendExpenseInfo(chatId, null);
             return;
         }
 
@@ -49,10 +45,6 @@ public class EditPaidByHandler implements StateHandler {
         ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(chatId);
         expenseUpdateDto.setPaidByUserId(Long.valueOf(input.split("_")[1]));
 
-        messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                balanceService.getExpenseTextFromExpenseDTO(
-                        userStateManager.getOrCreateExpenseUpdateDto(chatId)
-                ),
-                keyboardFactory.expenseDetailsKeyboard());
+        expenseManagementService.sendExpenseInfo(chatId, null);
     }
 }

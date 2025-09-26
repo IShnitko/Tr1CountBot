@@ -27,9 +27,6 @@ public class EditDateHandler implements StateHandler {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
     private final ExpenseManagementServiceImpl expenseManagementService;
     private final UserStateManager userStateManager;
-    private final MessageServiceImpl messageService;
-    private final BalanceServiceImpl balanceService;
-    private final KeyboardFactory keyboardFactory;
 
     @Override
     public void handle(ChatContext context) throws Exception {
@@ -44,11 +41,7 @@ public class EditDateHandler implements StateHandler {
 
         if (input.equalsIgnoreCase(Command.BACK_COMMAND.getCommand())) {
             userStateManager.setState(chatId, UserState.EXPENSE_INFO);
-            messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                    balanceService.getExpenseTextFromExpenseDTO(
-                            userStateManager.getOrCreateExpenseUpdateDto(chatId)
-                    ),
-                    keyboardFactory.expenseDetailsKeyboard());
+            expenseManagementService.sendExpenseInfo(chatId, null);
             return;
         }
 
@@ -56,11 +49,8 @@ public class EditDateHandler implements StateHandler {
             userStateManager.setState(chatId, UserState.EXPENSE_INFO);
             ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(chatId);
             expenseUpdateDto.setDate(LocalDate.now().atStartOfDay());
-            messageService.editMessage(context.getChatId(), context.getMessage().getMessageId(),
-                    balanceService.getExpenseTextFromExpenseDTO(
-                            expenseUpdateDto
-                    ),
-                    keyboardFactory.expenseDetailsKeyboard());
+
+            expenseManagementService.sendExpenseInfo(chatId, null);
             return;
         }
 
@@ -70,12 +60,7 @@ public class EditDateHandler implements StateHandler {
             ExpenseUpdateDto expenseUpdateDto = userStateManager.getOrCreateExpenseUpdateDto(chatId);
             expenseUpdateDto.setDate(expenseDate.atStartOfDay());
 
-            messageService.deleteMessage(chatId, context.getMessage().getMessageId()); // TODO: extract to service
-            messageService.editMessage(context.getChatId(), userStateManager.getBotMessageId(chatId),
-                    balanceService.getExpenseTextFromExpenseDTO(
-                            expenseUpdateDto
-                    ),
-                    keyboardFactory.expenseDetailsKeyboard());
+            expenseManagementService.sendExpenseInfo(chatId, context.getMessage().getMessageId());
 
         } catch (DateTimeParseException e) {
             expenseManagementService.sendInvalidDateInput(chatId, messageId);

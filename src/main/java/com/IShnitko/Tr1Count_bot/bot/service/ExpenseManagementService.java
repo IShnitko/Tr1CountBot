@@ -26,4 +26,8 @@ public interface ExpenseManagementService {
     void sendAmountInput(Long chatId, Integer messageId);
 
     void sendTitleInput(Long chatId, Integer messageId);
+
+    void sendExpenseInfo(Long chatId, Integer inputMessageId);
+
+    void sendIncorrectAmount(Long chatId, Integer messageId);
 }
