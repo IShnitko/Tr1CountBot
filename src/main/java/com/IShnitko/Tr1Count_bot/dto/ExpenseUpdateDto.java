@@ -13,11 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
-public class ExpenseUpdateDto {
+public class ExpenseUpdateDto implements SharedUsersProvider {
     private Long id;
     private String title;
     private BigDecimal amount;
@@ -41,9 +40,22 @@ public class ExpenseUpdateDto {
         return this;
     }
 
+    @Override
+    public void initializeSharedUsers(List<User> users) {
+        if (users != null) {
+            users.forEach(user -> sharedUsers.putIfAbsent(user.getTelegramId(), BigDecimal.ZERO));
+        }
+    }
 
-    public void applyToEntity(Expense expense, ExpenseUpdateDto expenseUpdateDto) {
+    @Override
+    public boolean isUserShared(Long telegramId) {
+        return sharedUsers.containsKey(telegramId);
+    }
 
+    @Override
+    public String getUserLabel(Long telegramId, UserService userService) {
+        BigDecimal amount = sharedUsers.get(telegramId);
+        return amount != null ? String.format("💵 %.2f", amount) : "❌";
     }
 
     public String toString(UserService userService) {
@@ -80,5 +92,4 @@ public class ExpenseUpdateDto {
 
         return sb.toString();
     }
-
 }

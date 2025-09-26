@@ -15,17 +15,28 @@ import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
-public class CreateExpenseDto {
+public class CreateExpenseDto implements SharedUsersProvider {
     private String title;
     private BigDecimal amount;
     private Long paidByUserId;
     private Map<Long, Boolean> sharedUsers = new HashMap<>();
     private LocalDateTime date;
 
+    @Override
     public void initializeSharedUsers(List<User> users) {
         if (users != null) {
             users.forEach(user -> sharedUsers.put(user.getTelegramId(), true));
         }
+    }
+
+    @Override
+    public boolean isUserShared(Long telegramId) {
+        return sharedUsers.getOrDefault(telegramId, true);
+    }
+
+    @Override
+    public String getUserLabel(Long telegramId, UserService userService) {
+        return isUserShared(telegramId) ? "✔️" : "❌";
     }
 
     public String toString(UserService userService) {
