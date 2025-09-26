@@ -2,9 +2,11 @@ package com.IShnitko.Tr1Count_bot.bot;
 
 import com.IShnitko.Tr1Count_bot.bot.model.Command;
 import com.IShnitko.Tr1Count_bot.dto.CreateExpenseDto;
+import com.IShnitko.Tr1Count_bot.dto.SharedUsersProvider;
 import com.IShnitko.Tr1Count_bot.model.Expense;
 import com.IShnitko.Tr1Count_bot.model.Group;
 import com.IShnitko.Tr1Count_bot.model.User;
+import com.IShnitko.Tr1Count_bot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -343,31 +345,26 @@ public class KeyboardFactory {
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public InlineKeyboardMarkup createSharedUsersKeyboard(List<User> members, CreateExpenseDto expenseDto) {
+    public InlineKeyboardMarkup createSharedUsersKeyboard(
+            List<User> members, SharedUsersProvider dto, UserService userService) {
+
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-        if (expenseDto.getSharedUsers().isEmpty()) {
-            expenseDto.initializeSharedUsers(members);
-        }
+        dto.initializeSharedUsers(members);
 
         for (User user : members) {
-            // Determine the current checkmark status from the DTO
-            boolean isShared = expenseDto.getSharedUsers().getOrDefault(user.getTelegramId(), true);
-            String checkmark = isShared ? " ✔️" : " ❌";
-            String buttonText = user.getName() + checkmark;
+            boolean isShared = dto.isUserShared(user.getTelegramId());
+            String label = dto.getUserLabel(user.getTelegramId(), userService);
+            String buttonText = user.getName() + " " + label;
 
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText(buttonText);
-            // The callback data must contain the user's ID for later processing
             button.setCallbackData("select_shared_user:" + user.getTelegramId());
 
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(button);
-            keyboard.add(row);
+            keyboard.add(List.of(button));
         }
 
-        // Add a final row with "Confirm" and "Cancel" buttons
         InlineKeyboardButton confirmButton = new InlineKeyboardButton();
         confirmButton.setText("✅ Confirm");
         confirmButton.setCallbackData("confirm_shared_users");
@@ -376,14 +373,12 @@ public class KeyboardFactory {
         cancelButton.setText("Return");
         cancelButton.setCallbackData(Command.BACK_COMMAND.getCommand());
 
-        List<InlineKeyboardButton> finalRow = new ArrayList<>();
-        finalRow.add(confirmButton);
-        finalRow.add(cancelButton);
-        keyboard.add(finalRow);
-
+        keyboard.add(List.of(confirmButton, cancelButton));
         markup.setKeyboard(keyboard);
+
         return markup;
     }
+
 
     public InlineKeyboardMarkup dateButton() { // TODO: add yesterday button
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();

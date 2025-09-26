@@ -12,6 +12,7 @@ import com.IShnitko.Tr1Count_bot.model.User;
 import com.IShnitko.Tr1Count_bot.service.GroupService;
 import com.IShnitko.Tr1Count_bot.bot.model.UserState;
 import com.IShnitko.Tr1Count_bot.bot.user_state.UserStateManager;
+import com.IShnitko.Tr1Count_bot.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -28,6 +29,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
     private final GroupService groupService;
     private final KeyboardFactory keyboardFactory;
     private final ExpenseManagementService expenseManagementService;
+    private final UserService userService;
 
     @Override
     public void handle(ChatContext context) throws TelegramApiException {
@@ -66,7 +68,7 @@ public class AwaitingSharedUsersHandler implements StateHandler {
         EditMessageReplyMarkup editMessage = new EditMessageReplyMarkup();
         editMessage.setChatId(String.valueOf(chatId));
         editMessage.setMessageId(context.getMessage().getMessageId());
-        editMessage.setReplyMarkup(keyboardFactory.createSharedUsersKeyboard(members, expenseDto));
+        editMessage.setReplyMarkup(keyboardFactory.createSharedUsersKeyboard(members, expenseDto, userService));
 
         // Update the message with the new keyboard
         messageService.editMessage(editMessage);
